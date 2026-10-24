@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LojikTrade Live Forward Dashboard</title>
+<style>
+:root{--bg:#0b1220;--card:#121a2b;--accent:#3b82f6;--good:#22c55e;--bad:#ef4444;--warn:#f59e0b;--text:#e5e7eb;--muted:#94a3b8;--border:#1f2937}
+*{box-sizing:border-box}
+body{margin:0;font-family:Segoe UI,Roboto,system-ui,sans-serif;background:var(--bg);color:var(--text)}
+header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+h1{margin:0;font-size:20px}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600}
+.badge.live{background:rgba(34,197,94,.15);color:var(--good);border:1px solid var(--good)}
+.badge.offline{background:rgba(239,68,68,.15);color:var(--bad);border:1px solid var(--bad)}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.container{padding:16px 20px;max-width:1400px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px}
+.card h3{margin:0 0 6px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.card .val{font-size:22px;font-weight:700}
+.card .sub{font-size:12px;color:var(--muted);margin-top:4px}
+.progress{height:10px;background:#1f2937;border-radius:999px;overflow:hidden;margin-top:8px}
+.progress>div{height:100%;background:linear-gradient(90deg,var(--accent),var(--good));transition:width .4s}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+button{background:var(--accent);color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600}
+button.secondary{background:#374151}
+button:disabled{opacity:.5;cursor:not-allowed}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--card)}
+.tbl-wrap{max-height:360px;overflow:auto;border:1px solid var(--border);border-radius:10px;background:var(--card)}
+.section{margin-bottom:20px}
+.section h2{font-size:16px;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
+canvas{width:100%;height:220px;background:var(--card);border:1px solid var(--border);border-radius:10px}
+.status-line{font-size:13px;color:var(--muted)}
+.good{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)}
+.mono{font-family:Consolas,monospace;font-size:11px}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>LojikTrade Live Forward Dashboard</h1>
+    <div class="status-line">Online-only browser engine · marks to market every 30s · data: ledger.json</div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <span id="liveBadge" class="badge offline"><span class="dot"></span>Connecting</span>
+    <span class="badge" style="background:#1f2937;color:var(--text);border:1px solid var(--border)">Next tick: <span id="countdown">30</span>s</span>
+    <span class="badge" style="background:#1f2937;color:var(--text);border:1px solid var(--border)">Last live tick: <span id="lastTick">—</span></span>
+  </div>
+</header>
+<div class="container">
+  <div class="row">
+    <button id="tickBtn">Tick Now</button>
+    <button id="pauseBtn" class="secondary">Pause</button>
+    <button id="verifyBtn" class="secondary">Verify Seals</button>
+    <span id="errLine" class="status-line bad"></span>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h3>Equity</h3><div class="val" id="equity">$0.00</div><div class="sub">Target $1,000.00</div><div class="progress"><div id="eqProgress" style="width:0%"></div></div></div>
+    <div class="card"><h3>Open Positions</h3><div class="val" id="openCount">0</div><div class="sub">Marked to market live</div></div>
+    <div class="card"><h3>Pending Orders</h3><div class="val" id="pendCount">0</div><div class="sub">Resting limits</div></div>
+    <div class="card"><h3>Closed Trades</h3><div class="val" id="closedCount">0</div><div class="sub">Realized</div></div>
+    <div class="card"><h3>4-Bet Block</h3><div class="val" id="blockState">OK</div><div class="sub" id="blockSub">Consecutive losses: 0</div></div>
+    <div class="card"><h3>Risk %</h3><div class="val" id="riskPct">5.0%</div><div class="sub">Per trade</div></div>
+  </div>
+
+  <div class="section">
+    <h2>Equity Curve (live ticks)</h2>
+    <canvas id="eqCanvas" width="1200" height="220"></canvas>
+  </div>
+
+  <div class="section">
+    <h2>Open Positions <span class="status-line" id="openSub"></span></h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Symbol</th><th>Market</th><th>TF</th><th>Arch</th><th>Dir</th><th>Entry</th><th>Live</th><th>Stop</th><th>Target</th><th>Unreal R</th><th>Risk$</th><th>Seal</th></tr></thead>
+        <tbody id="openBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Pending Resting Limit Orders <span class="status-line" id="pendSub"></span></h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Symbol</th><th>Market</th><th>TF</th><th>Arch</th><th>Dir</th><th>Limit</th><th>Live</th><th>Stop</th><th>Target</th><th>Score</th><th>Seal</th></tr></thead>
+        <tbody id="pendBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Recent Closed Trades <span class="status-line" id="closedSub"></span></h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Symbol</th><th>Market</th><th>TF</th><th>Arch</th><th>Dir</th><th>Entry</th><th>Exit</th><th>PnL R</th><th>Reason</th></tr></thead>
+        <tbody id="closedBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const LEDGER_URL = 'ledger.json';
+let ledger = null;
+let prices = {};
+let equitySeries = [];
+let lastTick = null;
+let running = true;
+let ticking = false;
+let countdown = 30;
+let countdownTimer = null;
+
+function costForMarket(m){
+  return m==='IndiaNSE'?0.0011 : m==='US'?0.0004 : m==='Crypto'?0.0014 : m==='FXCommod'?0.00045 : 0.0005;
+}
+async function sha256Hex(s){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function isRejectedHash(hex){ const h = parseInt(hex.slice(0,16),16)/Math.pow(2,64); return h < 0.02; }
+
+async function fetchYahooPrice(sym){
+  const url = 'https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(sym)+'?interval=1m&range=1d';
+  const proxies = [
+    'https://api.allorigins.win/get?url='+encodeURIComponent(url),
+    'https://corsproxy.io/?'+encodeURIComponent(url)
+  ];
+  for (const p of proxies){
+    try{
+      const r = await fetch(p, {signal: AbortSignal.timeout(9000)});
+      if(!r.ok) continue;
+      let data;
+      if (p.includes('allorigins')){
+        const j = await r.json();
+        data = JSON.parse(j.contents);
+      } else {
+        data = await r.json();
+      }
+      const res = data && data.chart && data.chart.result && data.chart.result[0];
+      if(!res) continue;
+      const price = res.meta && res.meta.regularMarketPrice;
+      if (price != null) return Number(price);
+      const closes = res.indicators && res.indicators.quote && res.indicators.quote[0] && res.indicators.quote[0].close;
+      if (closes){ for(let i=closes.length-1;i>=0;i--) if (closes[i]!=null) return Number(closes[i]); }
+    }catch(e){}
+  }
+  return null;
+}
+
+async function fetchAllPrices(){
+  const out = {};
+  let binanceMap = null;
+  try{
+    const r = await fetch('https://api.binance.com/api/v3/ticker/price', {signal: AbortSignal.timeout(9000)});
+    const arr = await r.json();
+    binanceMap = {};
+    for (const x of arr) binanceMap[x.symbol] = parseFloat(x.price);
+  }catch(e){}
+  const syms = new Set([...(ledger.open_positions||[]).map(p=>p.symbol), ...(ledger.pending_orders||[]).map(o=>o.symbol)]);
+  for (const s of syms){
+    if (s.endsWith('-USD')){
+      const bs = s.replace('-USD','USDT');
+      if (binanceMap && binanceMap[bs]!=null) out[s]=binanceMap[bs];
+    }
+  }
+  const yahooSyms = [...syms].filter(s=>!s.endsWith('-USD'));
+  await Promise.allSettled(yahooSyms.map(async sym=>{
+    const p = await fetchYahooPrice(sym);
+    if (p!=null) out[sym]=p;
+  }));
+  return out;
+}
+
+async function tick(){
+  if (ticking) return;
+  ticking = true;
+  const badge = document.getElementById('liveBadge');
+  badge.className='badge live'; badge.innerHTML='<span class="dot"></span>Live';
+  document.getElementById('errLine').textContent='';
+  try{
+    prices = await fetchAllPrices();
+    const now = new Date().toISOString();
+    const open = ledger.open_positions;
+    // close open positions
+    for (let i=open.length-1;i>=0;i--){
+      const pos = open[i];
+      const p = prices[pos.symbol];
+      if (p==null) continue;
+      const risk = pos.direction==='long' ? (pos.entry_price-pos.initial_stop) : (pos.initial_stop-pos.entry_price);
+      if (risk<=0) continue;
+      const unreal = pos.direction==='long' ? (p-pos.entry_price)/risk : (pos.entry_price-p)/risk;
+      // ratchet
+      if (unreal>=1.2){
+        if (pos.direction==='long'){ const ns=pos.entry_price+0.25*risk; if(ns>pos.stop_price) pos.stop_price=ns; }
+        else { const ns=pos.entry_price-0.25*risk; if(ns<pos.stop_price) pos.stop_price=ns; }
+      }
+      let exit=null, reason=null;
+      if (pos.direction==='long'){
+        if (p <= pos.stop_price){ exit=pos.stop_price; reason='stop'; }
+        else if (p >= pos.target_price){ exit=pos.target_price; reason='target'; }
+      } else {
+        if (p >= pos.stop_price){ exit=pos.stop_price; reason='stop'; }
+        else if (p <= pos.target_price){ exit=pos.target_price; reason='target'; }
+      }
+      if (exit!=null){
+        const pnl = pos.direction==='long' ? (exit-pos.entry_price)/risk : (pos.entry_price-exit)/risk;
+        const costPct = costForMarket(pos.market);
+        const slip = reason==='stop' ? 0.0005 : 0;
+        const costR = (costPct+slip)*pos.entry_price/risk;
+        const pnlNet = pnl - costR;
+        ledger.account.equity += pnlNet * pos.risk_capital;
+        const bs = ledger.block_stats;
+        if (pnlNet>0){ bs.consecutive_losses=0; bs.blocked=false; }
+        else { bs.consecutive_losses=(bs.consecutive_losses||0)+1; if(bs.consecutive_losses>=4) bs.blocked=true; }
+        ledger.closed_trades.push({
+          order_id: pos.order_id, symbol: pos.symbol, market: pos.market, tf: pos.tf, arch: pos.arch,
+          direction: pos.direction, entry_time: pos.entry_time, exit_time: now,
+          entry_price: pos.entry_price, exit_price: exit, pnl_r: Number(pnlNet.toFixed(4)), reason: reason
+        });
+        open.splice(i,1);
+      } else {
+        pos.unrealized_r = unreal;
+      }
+    }
+    // pending fills
+    const pending = ledger.pending_orders;
+    for (let i=pending.length-1;i>=0;i--){
+      const o = pending[i];
+      const p = prices[o.symbol];
+      if (p==null) continue;
+      const marketOpen = open.filter(x=>x.market===o.market).length;
+      if (marketOpen>=1) continue;
+      if (ledger.block_stats.blocked) continue;
+      const fill = o.direction==='long' ? (p <= o.limit_price) : (p >= o.limit_price);
+      if (!fill) continue;
+      const hex = await sha256Hex(o.order_id + now);
+      if (isRejectedHash(hex)) continue;
+      const risk = Math.abs(o.limit_price - o.stop_price);
+      if (risk<=0) continue;
+      const equity = ledger.account.equity;
+      open.push({
+        order_id: o.order_id, symbol: o.symbol, market: o.market, tf: o.tf, arch: o.arch,
+        direction: o.direction, entry_time: now, entry_price: o.limit_price,
+        stop_price: o.stop_price, initial_stop: o.stop_price, target_price: o.target_price,
+        risk_capital: equity * ledger.account.risk_pct, unrealized_r: 0, seal_sha256: o.seal_sha256
+      });
+      pending.splice(i,1);
+    }
+    // mark-to-market remaining
+    for (const pos of open){
+      const p = prices[pos.symbol];
+      if (p==null) continue;
+      const risk = pos.direction==='long' ? (pos.entry_price-pos.initial_stop) : (pos.initial_stop-pos.entry_price);
+      if (risk>0){
+        pos.unrealized_r = pos.direction==='long' ? (p-pos.entry_price)/risk : (pos.entry_price-p)/risk;
+      }
+    }
+    ledger.last_run = now;
+    equitySeries.push({t: Date.now(), equity: ledger.account.equity});
+    if (equitySeries.length>300) equitySeries.shift();
+    lastTick = now;
+    document.getElementById('lastTick').textContent = new Date(now).toLocaleTimeString();
+    renderAll();
+  }catch(e){
+    document.getElementById('errLine').textContent = 'Tick error: ' + e.message;
+    badge.className='badge offline'; badge.innerHTML='<span class="dot"></span>Offline';
+  } finally {
+    ticking = false;
+  }
+}
+
+function renderAll(){
+  if(!ledger) return;
+  const acct = ledger.account;
+  document.getElementById('equity').textContent = '$'+acct.equity.toFixed(2);
+  document.getElementById('openCount').textContent = ledger.open_positions.length;
+  document.getElementById('pendCount').textContent = ledger.pending_orders.length;
+  document.getElementById('closedCount').textContent = ledger.closed_trades.length;
+  const bs = ledger.block_stats;
+  document.getElementById('blockState').textContent = bs.blocked ? 'BLOCKED' : 'OK';
+  document.getElementById('blockState').className = 'val ' + (bs.blocked?'bad':'good');
+  document.getElementById('blockSub').textContent = 'Consecutive losses: '+(bs.consecutive_losses||0);
+  document.getElementById('riskPct').textContent = (acct.risk_pct*100).toFixed(1)+'%';
+  const pct = Math.min(100, Math.max(0, (acct.equity-100)/(1000-100)*100));
+  document.getElementById('eqProgress').style.width = pct+'%';
+
+  // open
+  const ob = document.getElementById('openBody');
+  ob.innerHTML = '';
+  for (const pos of ledger.open_positions){
+    const p = prices[pos.symbol];
+    const tr = document.createElement('tr');
+    const unreal = pos.unrealized_r||0;
+    tr.innerHTML = `<td>${pos.symbol}</td><td>${pos.market}</td><td>${pos.tf}</td><td>${pos.arch}</td><td>${pos.direction}</td>
+      <td>${pos.entry_price.toFixed(4)}</td><td>${p!=null?p.toFixed(4):'—'}</td><td>${pos.stop_price.toFixed(4)}</td><td>${pos.target_price.toFixed(4)}</td>
+      <td class="${unreal>=0?'good':'bad'}">${unreal.toFixed(2)}</td><td>${pos.risk_capital.toFixed(2)}</td>
+      <td class="mono">${(pos.seal_sha256||'').slice(0,10)}…</td>`;
+    ob.appendChild(tr);
+  }
+  document.getElementById('openSub').textContent = ledger.open_positions.length+' positions';
+
+  // pending (cap render to 500)
+  const pb = document.getElementById('pendBody');
+  pb.innerHTML = '';
+  const pend = ledger.pending_orders;
+  for (let i=0;i<pend.length;i++){
+    const o = pend[i];
+    const p = prices[o.symbol];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${o.symbol}</td><td>${o.market}</td><td>${o.tf}</td><td>${o.arch}</td><td>${o.direction}</td>
+      <td>${o.limit_price.toFixed(4)}</td><td>${p!=null?p.toFixed(4):'—'}</td><td>${o.stop_price.toFixed(4)}</td><td>${o.target_price.toFixed(4)}</td>
+      <td>${o.score.toFixed(2)}</td><td class="mono">${(o.seal_sha256||'').slice(0,10)}…</td>`;
+    pb.appendChild(tr);
+  }
+  document.getElementById('pendSub').textContent = pend.length+' orders';
+
+  // closed
+  const cb = document.getElementById('closedBody');
+  cb.innerHTML = '';
+  const recent = (ledger.closed_trades||[]).slice(-20).reverse();
+  for (const c of recent){
+    const tr = document.createElement('tr');
+    const pnl = c.pnl_r;
+    tr.innerHTML = `<td>${c.symbol}</td><td>${c.market}</td><td>${c.tf}</td><td>${c.arch}</td><td>${c.direction}</td>
+      <td>${Number(c.entry_price).toFixed(4)}</td><td>${Number(c.exit_price).toFixed(4)}</td>
+      <td class="${pnl>=0?'good':'bad'}">${Number(pnl).toFixed(4)}</td><td>${c.reason}</td>`;
+    cb.appendChild(tr);
+  }
+  document.getElementById('closedSub').textContent = (ledger.closed_trades||[]).length+' total';
+
+  drawEquity();
+}
+
+function drawEquity(){
+  const canvas = document.getElementById('eqCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#121a2b'; ctx.fillRect(0,0,W,H);
+  // target line
+  const allEq = equitySeries.map(s=>s.equity).concat([100, ledger.account.equity]);
+  const minE = Math.min(...allEq, 90);
+  const maxE = Math.max(...allEq, 1010);
+  const pad = (maxE-minE)*0.1 || 10;
+  const lo = minE - pad, hi = maxE + pad;
+  const y = v => H - ((v-lo)/(hi-lo))*H;
+  // target
+  ctx.strokeStyle = '#f59e0b'; ctx.setLineDash([6,4]);
+  ctx.beginPath(); ctx.moveTo(0,y(1000)); ctx.lineTo(W,y(1000)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle='#f59e0b'; ctx.font='11px sans-serif'; ctx.fillText('target $1000', 8, y(1000)-4);
+  if (equitySeries.length>=2){
+    ctx.strokeStyle='#3b82f6'; ctx.lineWidth=2;
+    ctx.beginPath();
+    equitySeries.forEach((s,i)=>{
+      const x = (i/(equitySeries.length-1))*W;
+      if(i===0) ctx.moveTo(x,y(s.equity)); else ctx.lineTo(x,y(s.equity));
+    });
+    ctx.stroke();
+  }
+  // current dot
+  if (equitySeries.length){
+    const last = equitySeries[equitySeries.length-1];
+    const x = (equitySeries.length-1)/(Math.max(1,equitySeries.length-1))*W;
+    ctx.fillStyle='#22c55e'; ctx.beginPath(); ctx.arc(x,y(last.equity),4,0,Math.PI*2); ctx.fill();
+  }
+}
+
+async function verifySeals(){
+  const out = [];
+  const sample = (ledger.pending_orders||[]).slice(0,8);
+  for (const o of sample){
+    const msg = `${o.symbol}|${o.tf}|${o.arch}|${o.direction}|${o.placed_bar_time}|${Number(o.limit_price).toFixed(6)}|${Number(o.stop_price).toFixed(6)}|${Number(o.target_price).toFixed(6)}`;
+    const hex = await sha256Hex(msg);
+    out.push(o.order_id.slice(0,28)+' → '+(hex===o.seal_sha256?'OK':'MISMATCH'));
+  }
+  alert('Seal verification (sample 8 pending):\n'+out.join('\n'));
+}
+
+async function init(){
+  try{
+    const r = await fetch(LEDGER_URL);
+    ledger = await r.json();
+    if (!ledger.account) ledger.account = {equity:100, risk_pct:0.05, target:1000};
+    if (!ledger.open_positions) ledger.open_positions=[];
+    if (!ledger.pending_orders) ledger.pending_orders=[];
+    if (!ledger.closed_trades) ledger.closed_trades=[];
+    if (!ledger.block_stats) ledger.block_stats={consecutive_losses:0,blocked:false};
+    equitySeries.push({t:Date.now(), equity: ledger.account.equity});
+    renderAll();
+    await tick();
+  }catch(e){
+    document.getElementById('errLine').textContent = 'Failed to load ledger.json: '+e.message;
+  }
+  countdownTimer = setInterval(()=>{
+    if (!running) return;
+    countdown--;
+    if (countdown<=0){ countdown=30; tick(); }
+    document.getElementById('countdown').textContent = countdown;
+  },1000);
+}
+
+document.getElementById('tickBtn').addEventListener('click', ()=>{ countdown=30; tick(); });
+document.getElementById('pauseBtn').addEventListener('click', (e)=>{
+  running = !running;
+  e.target.textContent = running ? 'Pause' : 'Resume';
+});
+document.getElementById('verifyBtn').addEventListener('click', verifySeals);
+
+init();
+</script>
+</body>
+</html>
