@@ -105,8 +105,8 @@ canvas{width:100%;height:220px;background:var(--card);border:1px solid var(--bor
 </div>
 
 <script>
-const LEDGER_URL = 'ledger.json';
-let ledger = null;
+const LEDGER_LOCAL_URL = 'ledger.json?t=' + Date.now();
+const LEDGER_CLOUD_URL = 'https://raw.githubusercontent.com/docstar1/lojiktrade-live/main/ledger.json?t=' + Date.now();let ledger = null;
 let prices = {};
 let equitySeries = [];
 let lastTick = null;
@@ -383,9 +383,10 @@ async function verifySeals(){
 
 async function init(){
   try{
-    const r = await fetch(LEDGER_URL);
-    ledger = await r.json();
-    if (!ledger.account) ledger.account = {equity:100, risk_pct:0.05, target:1000};
+    let r;
+    try { r = await fetch(LEDGER_LOCAL_URL); if(!r.ok) throw new Error(r.status); }
+    catch(e){ r = await fetch(LEDGER_CLOUD_URL); if(!r.ok) throw new Error(r.status); }
+    ledger = await r.json();    if (!ledger.account) ledger.account = {equity:100, risk_pct:0.05, target:1000};
     if (!ledger.open_positions) ledger.open_positions=[];
     if (!ledger.pending_orders) ledger.pending_orders=[];
     if (!ledger.closed_trades) ledger.closed_trades=[];

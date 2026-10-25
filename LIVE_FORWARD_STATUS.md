@@ -1,21 +1,20 @@
 # Live Forward Scanner Status
 
-Last run: 2026-10-24T01:01:44.851050+00:00
+Last run: 2026-10-25T22:23:24.605172+00:00
 
 ## Account
-- Equity: $90.06 (target $1000.00)
+- Equity: $75.87 (target $1000.00)
 - Risk %: 5.0%
-- Open positions: 3
-- Pending orders: 246
-- Closed trades: 2
-- Block stats: {'consecutive_losses': 2, 'blocked': False}
+- Open positions: 2
+- Pending orders: 218
+- Closed trades: 5
+- Block stats: {'consecutive_losses': 5, 'blocked': True}
 
 ## Open Positions
 | Symbol | Market | TF | Arch | Dir | Entry | Stop | Target | Unreal R |
 |---|---|---|---|---|---|---|---|---|
 | RELIANCE.NS | IndiaNSE | 1d | MA7 | short | 1220.2424 | 1258.3745 | 1098.2194 | 0.79 |
-| BTC-USD | Crypto | 1d | MA7 | long | 82128.0785 | 79070.8324 | 91911.2660 | -0.51 |
-| CL=F | FXCommod | 1h | F3 | long | 103.3200 | 101.9646 | 108.0640 | 0.09 |
+| BTC-USD | Crypto | 1d | MA7 | long | 82128.0785 | 79070.8324 | 91911.2660 | -0.58 |
 
 ## Pending Orders
 | Symbol | Market | TF | Arch | Dir | Limit | Stop | Target | Score |
@@ -130,7 +129,6 @@ Last run: 2026-10-24T01:01:44.851050+00:00
 | AMD | US | 1h | MA7 | short | 530.6718 | 543.2002 | 490.5808 | 2.60 |
 | AMD | US | 1h | MA7 | short | 529.7471 | 542.1416 | 490.0848 | 2.60 |
 | AMD | US | 1h | MA7 | short | 528.9163 | 541.1421 | 489.7940 | 2.60 |
-| AMD | US | 1d | MA7 | long | 573.1119 | 532.9686 | 701.5701 | 2.60 |
 | META | US | 1h | MA7 | short | 678.3242 | 695.2744 | 624.0837 | 2.60 |
 | META | US | 1h | MA7 | short | 676.1762 | 692.7589 | 623.1117 | 2.60 |
 | META | US | 1h | MA7 | short | 674.1420 | 690.6982 | 621.1621 | 2.60 |
@@ -202,36 +200,14 @@ Last run: 2026-10-24T01:01:44.851050+00:00
 | BTC-USD | Crypto | 1d | MA7 | long | 82180.5251 | 79055.1805 | 92181.6277 | 2.60 |
 | BTC-USD | Crypto | 1d | MA7 | long | 82298.6827 | 79229.7120 | 92119.3890 | 2.60 |
 | BTC-USD | Crypto | 1d | MA7 | long | 82235.0187 | 79131.5530 | 92166.1089 | 2.60 |
-| SOL-USD | Crypto | 1h | F3 | short | 103.2900 | 104.5483 | 98.8860 | 2.70 |
-| XRP-USD | Crypto | 1h | F3 | short | 1.2980 | 1.3136 | 1.2433 | 2.70 |
-| DOGE-USD | Crypto | 1h | F3 | short | 0.0789 | 0.0798 | 0.0754 | 2.70 |
 | DOGE-USD | Crypto | 1d | MA7 | short | 0.0861 | 0.0916 | 0.0683 | 2.60 |
 | DOGE-USD | Crypto | 1d | MA7 | short | 0.0858 | 0.0914 | 0.0679 | 2.60 |
 | DOGE-USD | Crypto | 1d | MA7 | short | 0.0855 | 0.0908 | 0.0688 | 2.60 |
 | DOGE-USD | Crypto | 1d | MA7 | short | 0.0851 | 0.0899 | 0.0698 | 2.60 |
 | DOGE-USD | Crypto | 1d | MA7 | short | 0.0847 | 0.0893 | 0.0697 | 2.60 |
-| LTC-USD | Crypto | 1h | MA7 | short | 59.1042 | 59.8222 | 56.8063 | 2.60 |
-| LTC-USD | Crypto | 1h | MA7 | short | 59.0545 | 59.8048 | 56.6539 | 2.60 |
-| LTC-USD | Crypto | 1h | MA7 | short | 58.9940 | 59.7481 | 56.5810 | 2.60 |
-| LTC-USD | Crypto | 1h | MA7 | short | 58.9371 | 59.6607 | 56.6214 | 2.60 |
-| LTC-USD | Crypto | 1h | MA7 | short | 58.8019 | 59.6419 | 56.1139 | 2.60 |
-| LTC-USD | Crypto | 1h | F3 | short | 57.8200 | 58.7160 | 54.6840 | 2.70 |
-| NEAR-USD | Crypto | 15m | MA7 | short | 4.8163 | 4.8805 | 4.6107 | 2.60 |
-| NEAR-USD | Crypto | 15m | MA7 | short | 4.8041 | 4.8713 | 4.5890 | 2.60 |
-| NEAR-USD | Crypto | 15m | MA7 | short | 4.7908 | 4.8647 | 4.5544 | 2.60 |
-| NEAR-USD | Crypto | 15m | MA7 | short | 4.7790 | 4.8524 | 4.5439 | 2.60 |
-| NEAR-USD | Crypto | 1h | MA7 | short | 4.9276 | 5.0522 | 4.5289 | 2.60 |
-| NEAR-USD | Crypto | 1h | MA7 | short | 4.9151 | 5.0425 | 4.5072 | 2.60 |
-| NEAR-USD | Crypto | 1h | F3 | short | 4.7769 | 4.9129 | 4.3011 | 2.70 |
-| NEAR-USD | Crypto | 1h | MA7 | short | 4.9082 | 5.0401 | 4.4861 | 2.60 |
-| NEAR-USD | Crypto | 1h | MA7 | short | 4.9024 | 5.0286 | 4.4988 | 2.60 |
-| NEAR-USD | Crypto | 1h | MA7 | short | 4.8834 | 5.0292 | 4.4166 | 2.60 |
-| NEAR-USD | Crypto | 1h | F3 | short | 4.7167 | 4.8723 | 4.1721 | 2.70 |
-| NEAR-USD | Crypto | 1h | F2 | long | 4.6068 | 4.5358 | 4.8834 | 2.80 |
 | NEAR-USD | Crypto | 1d | MA7 | long | 4.6454 | 3.7948 | 7.3675 | 2.60 |
 | NEAR-USD | Crypto | 1d | MA7 | long | 4.6634 | 3.8007 | 7.4243 | 2.60 |
 | NEAR-USD | Crypto | 1d | MA7 | long | 4.7121 | 3.9261 | 7.2273 | 2.60 |
-| NEAR-USD | Crypto | 1d | MA7 | long | 4.7053 | 3.9433 | 7.1437 | 2.60 |
 | TRX-USD | Crypto | 1d | MA7 | short | 0.3330 | 0.3376 | 0.3184 | 2.60 |
 | TRX-USD | Crypto | 1d | MA7 | short | 0.3328 | 0.3374 | 0.3181 | 2.60 |
 | GC=F | FXCommod | 1d | MA7 | short | 4246.9799 | 4354.6156 | 3902.5459 | 2.60 |
@@ -253,7 +229,6 @@ Last run: 2026-10-24T01:01:44.851050+00:00
 | CL=F | FXCommod | 1h | MA7 | long | 100.7085 | 99.4581 | 104.7096 | 2.60 |
 | CL=F | FXCommod | 1h | MA7 | long | 100.8815 | 99.6108 | 104.9478 | 2.60 |
 | CL=F | FXCommod | 1h | MA7 | long | 101.0594 | 99.7877 | 105.1292 | 2.60 |
-| CL=F | FXCommod | 1h | F3 | long | 103.5300 | 102.1734 | 108.2780 | 2.70 |
 | CL=F | FXCommod | 1h | MA7 | long | 101.2130 | 99.9284 | 105.3239 | 2.60 |
 | CL=F | FXCommod | 1d | MA7 | long | 93.7433 | 87.8365 | 112.6450 | 2.60 |
 | CL=F | FXCommod | 1d | F3 | long | 101.9000 | 95.5994 | 123.9520 | 2.70 |
@@ -261,10 +236,6 @@ Last run: 2026-10-24T01:01:44.851050+00:00
 | CL=F | FXCommod | 1d | MA7 | long | 94.4487 | 87.8241 | 115.6476 | 2.60 |
 | CL=F | FXCommod | 1d | MA7 | long | 94.7727 | 88.4084 | 115.1384 | 2.60 |
 | CL=F | FXCommod | 1d | MA7 | long | 95.3319 | 88.7597 | 116.3627 | 2.60 |
-| PNB.NS | IndiaNSE | 1h | MA7 | long | 120.3091 | 118.8627 | 124.9377 | 2.60 |
-| LTC-USD | Crypto | 1h | MA7 | short | 58.6865 | 59.4822 | 56.1401 | 2.60 |
-| NEAR-USD | Crypto | 15m | MA7 | short | 4.7699 | 4.8410 | 4.5421 | 2.60 |
-| NEAR-USD | Crypto | 1h | MA7 | short | 4.8675 | 5.0065 | 4.4228 | 2.60 |
 | NEAR-USD | Crypto | 1d | MA7 | long | 4.7009 | 3.8372 | 7.4647 | 2.60 |
 
 ## Recent Closed Trades
@@ -272,3 +243,6 @@ Last run: 2026-10-24T01:01:44.851050+00:00
 |---|---|---|---|---|---|---|
 | TSLA | US | 1d | E1 | short | -1.0265 | stop |
 | AMD | US | 1d | MA7 | long | -1.0131 | stop |
+| CL=F | FXCommod | 1h | F3 | long | -1.0724 | stop |
+| AMD | US | 1d | MA7 | long | -1.0128 | stop |
+| CL=F | FXCommod | 1h | F3 | long | -1.0725 | stop |
