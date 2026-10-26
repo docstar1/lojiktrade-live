@@ -18,7 +18,7 @@
       "initial_stop": 1258.3745404949864,
       "target_price": 1098.2193647137367,
       "risk_capital": 5.0,
-      "unrealized_r": 0.6095206965463676,
+      "unrealized_r": 0.483641498576137,
       "seal_sha256": "add435d53eecad5ebe30b4d8ea5345b7aeda3a036da0d6186e454fe091b138c3"
     },
     {
@@ -34,26 +34,11 @@
       "initial_stop": 79070.83241691544,
       "target_price": 91911.26601066544,
       "risk_capital": 5.0,
-      "unrealized_r": -0.6906467073363766,
+      "unrealized_r": -0.6073277481525727,
       "seal_sha256": "ca90aa67b2ea41e0d50e1b3a8960e37dbc45c5286827f3b52d8ed6f6e85b9475"
     }
   ],
   "pending_orders": [
-    {
-      "order_id": "RELIANCE.NS|1h|MA7|short|2026-10-23 11:15:00+05:30",
-      "symbol": "RELIANCE.NS",
-      "market": "IndiaNSE",
-      "tf": "1h",
-      "arch": "MA7",
-      "direction": "short",
-      "placed_bar_time": "2026-10-23 11:15:00+05:30",
-      "limit_price": 1194.403466688272,
-      "stop_price": 1209.3606069296225,
-      "target_price": 1146.5406179159502,
-      "score": 2.6,
-      "delta": 0.012522686561537096,
-      "seal_sha256": "ad5bbcfe47fbb4a5472bb5a8776e2d4776d82b89aeb97e878af5b7fb3bfa88bb"
-    },
     {
       "order_id": "RELIANCE.NS|1h|MA7|short|2026-10-23 12:15:00+05:30",
       "symbol": "RELIANCE.NS",
@@ -415,21 +400,6 @@
       "seal_sha256": "0a60b2f0ba7f25b0bf198339659ca894a85559ad23103073a17b58d388bdd2b5"
     },
     {
-      "order_id": "INFY.NS|1h|MA7|long|2026-10-23 11:15:00+05:30",
-      "symbol": "INFY.NS",
-      "market": "IndiaNSE",
-      "tf": "1h",
-      "arch": "MA7",
-      "direction": "long",
-      "placed_bar_time": "2026-10-23 11:15:00+05:30",
-      "limit_price": 1144.7408860929943,
-      "stop_price": 1126.2319444426037,
-      "target_price": 1203.9694993742444,
-      "score": 2.6,
-      "delta": 0.016168673518390457,
-      "seal_sha256": "802deddc3a62bee90b58bd8df2ad43e6bd534032bd4fd8e5cc8629cbc4cbef3e"
-    },
-    {
       "order_id": "INFY.NS|1h|MA7|long|2026-10-23 12:15:00+05:30",
       "symbol": "INFY.NS",
       "market": "IndiaNSE",
@@ -520,21 +490,6 @@
       "seal_sha256": "a7b659b5f52aa2b988f48660df61eb0ce9fc29d75b47cb09618f8cb27466c93d"
     },
     {
-      "order_id": "TCS.NS|1h|MA7|long|2026-10-23 11:15:00+05:30",
-      "symbol": "TCS.NS",
-      "market": "IndiaNSE",
-      "tf": "1h",
-      "arch": "MA7",
-      "direction": "long",
-      "placed_bar_time": "2026-10-23 11:15:00+05:30",
-      "limit_price": 2477.6923886330796,
-      "stop_price": 2438.263817204508,
-      "target_price": 2603.8638172045085,
-      "score": 2.6,
-      "delta": 0.015913424769538862,
-      "seal_sha256": "2ee58caa5a92f68d98ed09b276e07371105151e6cb48aba80855cad819c22755"
-    },
-    {
       "order_id": "TCS.NS|1h|MA7|long|2026-10-23 12:15:00+05:30",
       "symbol": "TCS.NS",
       "market": "IndiaNSE",
@@ -593,21 +548,6 @@
       "score": 2.6,
       "delta": 0.016640915218523334,
       "seal_sha256": "308f60d280e7d0c8a24eaf07fb8ae6d7e50b32590a8d6b42887c868f822f7db1"
-    },
-    {
-      "order_id": "BAJFINANCE.NS|1h|MA7|short|2026-10-23 11:15:00+05:30",
-      "symbol": "BAJFINANCE.NS",
-      "market": "IndiaNSE",
-      "tf": "1h",
-      "arch": "MA7",
-      "direction": "short",
-      "placed_bar_time": "2026-10-23 11:15:00+05:30",
-      "limit_price": 943.2941367483285,
-      "stop_price": 957.0726990216265,
-      "target_price": 899.2027374737748,
-      "score": 2.6,
-      "delta": 0.014606856691375934,
-      "seal_sha256": "def75cefae59203239ef8ca9aabe653f014fc2a38a56dfd43492136c1ce8d17e"
     },
     {
       "order_id": "BAJFINANCE.NS|1h|MA7|short|2026-10-23 12:15:00+05:30",
@@ -803,21 +743,6 @@
       "score": 2.6,
       "delta": 0.03122341126450778,
       "seal_sha256": "f026aac20e5b6137383d74739b50e37cc7533c58c46d47e67dca073c8b0e727b"
-    },
-    {
-      "order_id": "M&M.NS|1h|MA7|short|2026-10-23 11:15:00+05:30",
-      "symbol": "M&M.NS",
-      "market": "IndiaNSE",
-      "tf": "1h",
-      "arch": "MA7",
-      "direction": "short",
-      "placed_bar_time": "2026-10-23 11:15:00+05:30",
-      "limit_price": 2859.0861302461562,
-      "stop_price": 2901.825405497272,
-      "target_price": 2722.3204494425854,
-      "score": 2.6,
-      "delta": 0.014948579127777537,
-      "seal_sha256": "5d52bc6e84b01ce1662eb3765941423dce903b117c43a09015e2018dc44c8694"
     },
     {
       "order_id": "M&M.NS|1h|MA7|short|2026-10-23 12:15:00+05:30",
@@ -1043,21 +968,6 @@
       "score": 2.6,
       "delta": 0.037088254137190635,
       "seal_sha256": "a9da49e09233c39c40ed42eeb2f39e82942f217c3101a4ecac7a975e07e41cad"
-    },
-    {
-      "order_id": "BEL.NS|1h|MA7|short|2026-10-23 11:15:00+05:30",
-      "symbol": "BEL.NS",
-      "market": "IndiaNSE",
-      "tf": "1h",
-      "arch": "MA7",
-      "direction": "short",
-      "placed_bar_time": "2026-10-23 11:15:00+05:30",
-      "limit_price": 368.8992368921558,
-      "stop_price": 374.0099524857663,
-      "target_price": 352.54494699260215,
-      "score": 2.6,
-      "delta": 0.013853960871988947,
-      "seal_sha256": "1206d8e89abdb8fc3d2248a2e187f50e0c799002b9c4fbd22c2c71d11babd76b"
     },
     {
       "order_id": "BEL.NS|1h|MA7|short|2026-10-23 12:15:00+05:30",
@@ -3130,81 +3040,6 @@
       "seal_sha256": "f4aa7fc5de84bf317b5142eb0ee0a7b8594bbab7034a1dd60ac4a14f09ac64da"
     },
     {
-      "order_id": "CL=F|1h|MA7|long|2026-10-23 12:00:00-04:00",
-      "symbol": "CL=F",
-      "market": "FXCommod",
-      "tf": "1h",
-      "arch": "MA7",
-      "direction": "long",
-      "placed_bar_time": "2026-10-23 12:00:00-04:00",
-      "limit_price": 100.56077241144824,
-      "stop_price": 99.34577198638198,
-      "target_price": 104.44877377166029,
-      "score": 2.6,
-      "delta": 0.012082250324162628,
-      "seal_sha256": "ca0b4ce68f967982b2f3177f74a764ae6130a676fbf9d7cc4b8ed52badb380ba"
-    },
-    {
-      "order_id": "CL=F|1h|MA7|long|2026-10-23 13:00:00-04:00",
-      "symbol": "CL=F",
-      "market": "FXCommod",
-      "tf": "1h",
-      "arch": "MA7",
-      "direction": "long",
-      "placed_bar_time": "2026-10-23 13:00:00-04:00",
-      "limit_price": 100.70846441549166,
-      "stop_price": 99.45810746881895,
-      "target_price": 104.70960664484433,
-      "score": 2.6,
-      "delta": 0.012415609292920285,
-      "seal_sha256": "a7c4c417da5c61279c2a9c4b2e27f8217742515465cf3e09cfcfc74225feae14"
-    },
-    {
-      "order_id": "CL=F|1h|MA7|long|2026-10-23 14:00:00-04:00",
-      "symbol": "CL=F",
-      "market": "FXCommod",
-      "tf": "1h",
-      "arch": "MA7",
-      "direction": "long",
-      "placed_bar_time": "2026-10-23 14:00:00-04:00",
-      "limit_price": 100.88146667188887,
-      "stop_price": 99.61075232077978,
-      "target_price": 104.94775259543796,
-      "score": 2.6,
-      "delta": 0.012596112973278003,
-      "seal_sha256": "dd2c4fc24c68ec079ffc8d89b37f879e08c97327fdfddec1fe4ed48d9ca3a447"
-    },
-    {
-      "order_id": "CL=F|1h|MA7|long|2026-10-23 15:00:00-04:00",
-      "symbol": "CL=F",
-      "market": "FXCommod",
-      "tf": "1h",
-      "arch": "MA7",
-      "direction": "long",
-      "placed_bar_time": "2026-10-23 15:00:00-04:00",
-      "limit_price": 101.05943652464755,
-      "stop_price": 99.7876505160852,
-      "target_price": 105.1291517520471,
-      "score": 2.6,
-      "delta": 0.01258453492615883,
-      "seal_sha256": "4d113df6710f071a8cf48f8973748e3a3e3393d917caf30f1a2bbd0a8e1c3b0f"
-    },
-    {
-      "order_id": "CL=F|1h|MA7|long|2026-10-23 16:00:00-04:00",
-      "symbol": "CL=F",
-      "market": "FXCommod",
-      "tf": "1h",
-      "arch": "MA7",
-      "direction": "long",
-      "placed_bar_time": "2026-10-23 16:00:00-04:00",
-      "limit_price": 101.21302142250296,
-      "stop_price": 99.92837879424194,
-      "target_price": 105.32387783293824,
-      "score": 2.6,
-      "delta": 0.01269246397554344,
-      "seal_sha256": "66175fa747243b93036662014f102526c4c056935fb2a2d4b74a54da9927b3dc"
-    },
-    {
       "order_id": "CL=F|1d|MA7|long|2026-10-19 00:00:00",
       "symbol": "CL=F",
       "market": "FXCommod",
@@ -3386,5 +3221,5 @@
     "consecutive_losses": 5,
     "blocked": true
   },
-  "last_run": "2026-10-26T05:05:35.036722+00:00"
+  "last_run": "2026-10-26T11:03:35.466834+00:00"
 }

@@ -1,25 +1,24 @@
 # Live Forward Scanner Status
 
-Last run: 2026-10-26T05:05:35.036722+00:00
+Last run: 2026-10-26T11:03:35.466834+00:00
 
 ## Account
 - Equity: $75.87 (target $1000.00)
 - Risk %: 5.0%
 - Open positions: 2
-- Pending orders: 218
+- Pending orders: 207
 - Closed trades: 5
 - Block stats: {'consecutive_losses': 5, 'blocked': True}
 
 ## Open Positions
 | Symbol | Market | TF | Arch | Dir | Entry | Stop | Target | Unreal R |
 |---|---|---|---|---|---|---|---|---|
-| RELIANCE.NS | IndiaNSE | 1d | MA7 | short | 1220.2424 | 1258.3745 | 1098.2194 | 0.61 |
-| BTC-USD | Crypto | 1d | MA7 | long | 82128.0785 | 79070.8324 | 91911.2660 | -0.69 |
+| RELIANCE.NS | IndiaNSE | 1d | MA7 | short | 1220.2424 | 1258.3745 | 1098.2194 | 0.48 |
+| BTC-USD | Crypto | 1d | MA7 | long | 82128.0785 | 79070.8324 | 91911.2660 | -0.61 |
 
 ## Pending Orders
 | Symbol | Market | TF | Arch | Dir | Limit | Stop | Target | Score |
 |---|---|---|---|---|---|---|---|---|
-| RELIANCE.NS | IndiaNSE | 1h | MA7 | short | 1194.4035 | 1209.3606 | 1146.5406 | 2.60 |
 | RELIANCE.NS | IndiaNSE | 1h | MA7 | short | 1193.0290 | 1207.8469 | 1145.6119 | 2.60 |
 | RELIANCE.NS | IndiaNSE | 1h | MA7 | short | 1192.6207 | 1208.4779 | 1141.8779 | 2.60 |
 | RELIANCE.NS | IndiaNSE | 1h | MA7 | short | 1192.1420 | 1207.9348 | 1141.6048 | 2.60 |
@@ -44,19 +43,16 @@ Last run: 2026-10-26T05:05:35.036722+00:00
 | SBIN.NS | IndiaNSE | 1d | MA7 | short | 976.5510 | 1003.2617 | 891.0766 | 2.60 |
 | SBIN.NS | IndiaNSE | 1d | MA7 | short | 976.1283 | 1003.6480 | 888.0654 | 2.60 |
 | SBIN.NS | IndiaNSE | 1d | MA7 | short | 974.9975 | 1002.7153 | 886.3002 | 2.60 |
-| INFY.NS | IndiaNSE | 1h | MA7 | long | 1144.7409 | 1126.2319 | 1203.9695 | 2.60 |
 | INFY.NS | IndiaNSE | 1h | MA7 | long | 1145.5866 | 1127.6295 | 1203.0495 | 2.60 |
 | INFY.NS | IndiaNSE | 1h | MA7 | long | 1146.4843 | 1127.5468 | 1207.0843 | 2.60 |
 | INFY.NS | IndiaNSE | 1h | MA7 | long | 1146.9692 | 1127.0352 | 1210.7578 | 2.60 |
 | INFY.NS | IndiaNSE | 1h | MA7 | long | 1147.4099 | 1127.7759 | 1210.2385 | 2.60 |
 | INFY.NS | IndiaNSE | 1d | P3_v2 | short | 1174.5000 | 1206.4208 | 1062.7773 | 2.90 |
 | INFY.NS | IndiaNSE | 1d | E1 | short | 1117.9250 | 1204.2656 | 841.6353 | 2.50 |
-| TCS.NS | IndiaNSE | 1h | MA7 | long | 2477.6924 | 2438.2638 | 2603.8638 | 2.60 |
 | TCS.NS | IndiaNSE | 1h | MA7 | long | 2480.9703 | 2440.5239 | 2610.3989 | 2.60 |
 | TCS.NS | IndiaNSE | 1h | MA7 | long | 2484.3529 | 2442.6314 | 2617.8614 | 2.60 |
 | TCS.NS | IndiaNSE | 1h | MA7 | long | 2487.0011 | 2444.6582 | 2622.4982 | 2.60 |
 | TCS.NS | IndiaNSE | 1h | MA7 | long | 2489.7752 | 2448.3430 | 2622.3580 | 2.60 |
-| BAJFINANCE.NS | IndiaNSE | 1h | MA7 | short | 943.2941 | 957.0727 | 899.2027 | 2.60 |
 | BAJFINANCE.NS | IndiaNSE | 1h | MA7 | short | 941.6945 | 955.6017 | 897.1917 | 2.60 |
 | BAJFINANCE.NS | IndiaNSE | 1h | MA7 | short | 940.6336 | 955.0443 | 894.5193 | 2.60 |
 | BAJFINANCE.NS | IndiaNSE | 1h | MA7 | short | 939.4959 | 954.2870 | 892.1645 | 2.60 |
@@ -70,7 +66,6 @@ Last run: 2026-10-26T05:05:35.036722+00:00
 | LT.NS | IndiaNSE | 1d | MA7 | short | 3766.3955 | 3883.3634 | 3392.0984 | 2.60 |
 | LT.NS | IndiaNSE | 1d | MA7 | short | 3758.1313 | 3879.2134 | 3370.6685 | 2.60 |
 | LT.NS | IndiaNSE | 1d | MA7 | short | 3750.9616 | 3868.0794 | 3376.1845 | 2.60 |
-| M&M.NS | IndiaNSE | 1h | MA7 | short | 2859.0861 | 2901.8254 | 2722.3204 | 2.60 |
 | M&M.NS | IndiaNSE | 1h | MA7 | short | 2856.3257 | 2899.3329 | 2718.7029 | 2.60 |
 | M&M.NS | IndiaNSE | 1h | MA7 | short | 2854.0596 | 2896.9703 | 2716.7453 | 2.60 |
 | M&M.NS | IndiaNSE | 1h | MA7 | short | 2853.2557 | 2895.5343 | 2717.9643 | 2.60 |
@@ -86,7 +81,6 @@ Last run: 2026-10-26T05:05:35.036722+00:00
 | HAL.NS | IndiaNSE | 1d | MA7 | long | 4810.0824 | 4634.2073 | 5372.8825 | 2.60 |
 | HAL.NS | IndiaNSE | 1d | MA7 | long | 4814.2706 | 4640.0027 | 5371.9277 | 2.60 |
 | HAL.NS | IndiaNSE | 1d | MA7 | long | 4808.5112 | 4630.1719 | 5379.1969 | 2.60 |
-| BEL.NS | IndiaNSE | 1h | MA7 | short | 368.8992 | 374.0100 | 352.5449 | 2.60 |
 | BEL.NS | IndiaNSE | 1h | MA7 | short | 368.0154 | 373.3351 | 350.9926 | 2.60 |
 | BEL.NS | IndiaNSE | 1h | F3 | short | 356.2500 | 361.9243 | 336.3900 | 2.70 |
 | BEL.NS | IndiaNSE | 1h | MA7 | short | 367.3241 | 372.8687 | 349.5813 | 2.60 |
@@ -225,11 +219,6 @@ Last run: 2026-10-26T05:05:35.036722+00:00
 | SI=F | FXCommod | 1d | MA7 | short | 59.7943 | 61.7126 | 53.6558 | 2.60 |
 | SI=F | FXCommod | 1d | F3 | short | 54.3900 | 56.4362 | 47.2284 | 2.70 |
 | SI=F | FXCommod | 1d | F2 | long | 53.9600 | 52.7553 | 59.3812 | 2.80 |
-| CL=F | FXCommod | 1h | MA7 | long | 100.5608 | 99.3458 | 104.4488 | 2.60 |
-| CL=F | FXCommod | 1h | MA7 | long | 100.7085 | 99.4581 | 104.7096 | 2.60 |
-| CL=F | FXCommod | 1h | MA7 | long | 100.8815 | 99.6108 | 104.9478 | 2.60 |
-| CL=F | FXCommod | 1h | MA7 | long | 101.0594 | 99.7877 | 105.1292 | 2.60 |
-| CL=F | FXCommod | 1h | MA7 | long | 101.2130 | 99.9284 | 105.3239 | 2.60 |
 | CL=F | FXCommod | 1d | MA7 | long | 93.7433 | 87.8365 | 112.6450 | 2.60 |
 | CL=F | FXCommod | 1d | F3 | long | 101.9000 | 95.5994 | 123.9520 | 2.70 |
 | CL=F | FXCommod | 1d | MA7 | long | 94.2624 | 87.7064 | 115.2419 | 2.60 |
