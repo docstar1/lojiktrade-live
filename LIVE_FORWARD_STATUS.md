@@ -1,6 +1,6 @@
 # Live Forward Scanner Status
 
-Last run: 2026-10-25T22:23:24.605172+00:00
+Last run: 2026-10-26T00:19:32.322691+00:00
 
 ## Account
 - Equity: $75.87 (target $1000.00)
@@ -14,7 +14,7 @@ Last run: 2026-10-25T22:23:24.605172+00:00
 | Symbol | Market | TF | Arch | Dir | Entry | Stop | Target | Unreal R |
 |---|---|---|---|---|---|---|---|---|
 | RELIANCE.NS | IndiaNSE | 1d | MA7 | short | 1220.2424 | 1258.3745 | 1098.2194 | 0.79 |
-| BTC-USD | Crypto | 1d | MA7 | long | 82128.0785 | 79070.8324 | 91911.2660 | -0.58 |
+| BTC-USD | Crypto | 1d | MA7 | long | 82128.0785 | 79070.8324 | 91911.2660 | -0.69 |
 
 ## Pending Orders
 | Symbol | Market | TF | Arch | Dir | Limit | Stop | Target | Score |
