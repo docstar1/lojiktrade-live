@@ -34,7 +34,7 @@
       "initial_stop": 79070.83241691544,
       "target_price": 91911.26601066544,
       "risk_capital": 5.0,
-      "unrealized_r": -0.6073277481525727,
+      "unrealized_r": -0.5771790875038832,
       "seal_sha256": "ca90aa67b2ea41e0d50e1b3a8960e37dbc45c5286827f3b52d8ed6f6e85b9475"
     }
   ],
@@ -3221,5 +3221,5 @@
     "consecutive_losses": 5,
     "blocked": true
   },
-  "last_run": "2026-10-26T11:03:35.466834+00:00"
+  "last_run": "2026-10-26T17:21:08.932333+00:00"
 }
