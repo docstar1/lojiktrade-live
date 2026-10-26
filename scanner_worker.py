@@ -1,4 +1,4 @@
-"""Standalone live forward scanner.
+"""Standalone live forward scanner (upgraded).
 
 Imports only the standard library, numpy, pandas and yfinance so it runs in
 <15s locally and in GitHub Actions.
@@ -56,6 +56,14 @@ WATCHLIST = {
 TF_PERIOD = {"15m": "15d", "1h": "60d", "1d": "2y"}
 TF_SEC = {"15m": 900, "1h": 3600, "1d": 86400}
 
+MAX_OPEN_POSITIONS = 1
+MAX_PENDING_GLOBAL = 8
+MAX_PENDING_PER_SYMBOL = 1
+COOLDOWN_BARS = 5
+MAX_RISK_PCT = 0.02
+ALLOWED_ARCHS = {"T10_SOROS", "F1_SOROS_MA", "MA7_TRUE", "P3_SWEEP", "F3_BREAKOUT"}
+VALID_ARCHS = ALLOWED_ARCHS
+
 
 def market_info(market):
     return WATCHLIST.get(market, {})
@@ -77,7 +85,6 @@ def fetch_one(symbol, tf):
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = [c[0] if isinstance(c, tuple) else c for c in df.columns]
     df = df.reset_index()
-    # normalize time column
     tcol = None
     for c in df.columns:
         cl = str(c).lower()
@@ -88,10 +95,8 @@ def fetch_one(symbol, tf):
         tcol = df.columns[0]
     if tcol != "Time":
         df = df.rename(columns={tcol: "Time"})
-    # ensure standard columns
     for col in ("Open", "High", "Low", "Close", "Volume"):
         if col not in df.columns:
-            # try lowercase
             for c in df.columns:
                 if str(c).lower() == col.lower():
                     df = df.rename(columns={c: col})
@@ -105,20 +110,52 @@ def compute_indicators(df):
     h = df["High"].astype(float)
     l = df["Low"].astype(float)
     o = df["Open"].astype(float)
-    v = df["Volume"].astype(float) if "Volume" in df.columns else pd.Series(0, index=df.index)
+    if "Volume" in df.columns:
+        v = df["Volume"].astype(float)
+    else:
+        v = pd.Series(0.0, index=df.index)
 
-    df["EMA9"] = c.ewm(span=9, adjust=False).mean()
-    df["EMA30"] = c.ewm(span=30, adjust=False).mean()
-    df["SMA200"] = c.rolling(200, min_periods=50).mean()
+    df["ema9"] = c.ewm(span=9, adjust=False).mean()
+    df["ema30"] = c.ewm(span=30, adjust=False).mean()
+    df["ema50"] = c.ewm(span=50, adjust=False).mean()
+    df["sma200"] = c.rolling(200, min_periods=50).mean()
+    df["sma200_prev5"] = df["sma200"].shift(5)
+
     tr = pd.concat([h - l, (h - c.shift()).abs(), (l - c.shift()).abs()], axis=1).max(axis=1)
-    df["ATR"] = tr.rolling(14, min_periods=5).mean()
+    df["atr"] = tr.rolling(14, min_periods=5).mean()
+
     vm = v.rolling(20, min_periods=5).mean()
     vs = v.rolling(20, min_periods=5).std(ddof=0)
-    df["Z_V"] = (v - vm) / vs.replace(0, np.nan)
-    df["H20"] = h.rolling(20, min_periods=5).max().shift(1)
-    df["L20"] = l.rolling(20, min_periods=5).min().shift(1)
-    df["H10"] = h.rolling(10, min_periods=3).max().shift(1)
-    df["L10"] = l.rolling(10, min_periods=3).min().shift(1)
+    df["z_v"] = (v - vm) / vs.replace(0, np.nan)
+    df["vol_ratio"] = v / vm.replace(0, np.nan)
+
+    delta = c.diff()
+    up = delta.clip(lower=0)
+    down = -delta.clip(upper=0)
+    roll_up = up.ewm(alpha=1.0 / 14.0, adjust=False).mean()
+    roll_down = down.ewm(alpha=1.0 / 14.0, adjust=False).mean()
+    rs = roll_up / (roll_down + 1e-9)
+    df["rsi"] = 100.0 - (100.0 / (1.0 + rs))
+
+    df["h20"] = h.shift(1).rolling(20, min_periods=5).max()
+    df["l20"] = l.shift(1).rolling(20, min_periods=5).min()
+    df["h10"] = h.shift(1).rolling(10, min_periods=3).max()
+    df["l10"] = l.shift(1).rolling(10, min_periods=3).min()
+
+    df["er10"] = (c - c.shift(10)).abs() / (c.diff().abs().rolling(10).sum() + 1e-9)
+    df["atr_ratio"] = df["atr"] / (df["atr"].rolling(50, min_periods=5).mean() + 1e-9)
+
+    # convenience aliases (uppercase) for backward compat
+    df["EMA9"] = df["ema9"]
+    df["EMA30"] = df["ema30"]
+    df["EMA50"] = df["ema50"]
+    df["SMA200"] = df["sma200"]
+    df["ATR"] = df["atr"]
+    df["Z_V"] = df["z_v"]
+    df["H20"] = df["h20"]
+    df["L20"] = df["l20"]
+    df["H10"] = df["h10"]
+    df["L10"] = df["l10"]
     df["_O"] = o
     return df
 
@@ -137,11 +174,12 @@ def build_signal(symbol, market, tf, arch, direction, placed_bar_time, limit, st
     R = abs(limit - stop)
     if R <= 0:
         return None
-    delta = R / abs(limit)
+    delta = R / abs(limit) if abs(limit) > 0 else 0.0
     if delta < 0.012:
         return None
     if score < 2.4:
         return None
+    rr = abs(target - limit) / R if R > 0 else 0.0
     oid = f"{symbol}|{tf}|{arch}|{direction}|{placed_bar_time}"
     seal = hashlib.sha256(
         f"{symbol}|{tf}|{arch}|{direction}|{placed_bar_time}|{limit:.6f}|{stop:.6f}|{target:.6f}".encode()
@@ -159,163 +197,494 @@ def build_signal(symbol, market, tf, arch, direction, placed_bar_time, limit, st
         "target_price": target,
         "score": float(score),
         "delta": float(delta),
+        "rr": round(float(rr), 4),
         "seal_sha256": seal,
     }
 
 
-def run_detectors(symbol, market, tf, df):
+def _row(df, i):
+    r = df.iloc[i]
+    def g(key):
+        try:
+            return float(r[key])
+        except Exception:
+            return float("nan")
+    return {
+        "close": g("Close") if "Close" in df.columns else g("close"),
+    }
+
+
+def _get(df, i, col):
+    try:
+        v = df.iloc[i][col]
+        return float(v)
+    except Exception:
+        try:
+            return float(df.iloc[i][col.lower()])
+        except Exception:
+            return float("nan")
+
+
+def _safe(df, i, col):
+    return _get(df, i, col)
+
+
+def run_detectors(sym, df, tf, market=None, keep_all=False):
+    if market is None:
+        # infer
+        if str(sym).endswith(".NS"):
+            market = "IndiaNSE"
+        elif str(sym).endswith("-USD"):
+            market = "Crypto"
+        elif "=" in str(sym) or str(sym).endswith("=X"):
+            market = "FXCommod"
+        else:
+            market = "US"
     out = []
     n = len(df)
-    start = max(0, n - 5)
+    if n < 5:
+        return out
     is_equity = market in ("IndiaNSE", "US")
-    for i in range(start, n):
-        row = df.iloc[i]
+    # evaluate last 2 bars max
+    for ii in range(max(0, n - 2), n):
+        i = ii
         try:
-            close = float(row["Close"]); high = float(row["High"]); low = float(row["Low"]); openp = float(row["Open"])
-            ema9 = float(row["EMA9"]); ema30 = float(row["EMA30"]); sma200 = float(row["SMA200"])
-            atr = float(row["ATR"]); zv = float(row["Z_V"])
+            close = _safe(df, i, "Close")
+            high = _safe(df, i, "High")
+            low = _safe(df, i, "Low")
+            openp = _safe(df, i, "Open")
+            ema9 = _safe(df, i, "ema9")
+            ema30 = _safe(df, i, "ema30")
+            ema50 = _safe(df, i, "ema50")
+            sma200 = _safe(df, i, "sma200")
+            sma200_prev5 = _safe(df, i, "sma200_prev5")
+            atr = _safe(df, i, "atr")
+            zv = _safe(df, i, "z_v")
+            vol_ratio = _safe(df, i, "vol_ratio")
+            rsi = _safe(df, i, "rsi")
+            h20 = _safe(df, i, "h20")
+            l20 = _safe(df, i, "l20")
+            h10 = _safe(df, i, "h10")
+            l10 = _safe(df, i, "l10")
+            er10 = _safe(df, i, "er10")
+            atr_ratio = _safe(df, i, "atr_ratio")
         except Exception:
             continue
         if not np.isfinite(atr) or atr <= 0:
             continue
         if not np.isfinite(ema30) or not np.isfinite(sma200):
             continue
-        ts = str(row["Time"])
-        h20 = row.get("H20", np.nan); l20 = row.get("L20", np.nan)
-        h10 = row.get("H10", np.nan); l10 = row.get("L10", np.nan)
+        ts = str(df.iloc[i]["Time"]) if "Time" in df.columns else str(df.index[i])
+        # ema50 shifted 5
+        ema50_prev5 = float("nan")
+        if i >= 5:
+            try:
+                ema50_prev5 = float(df.iloc[i - 5]["ema50"])
+            except Exception:
+                ema50_prev5 = float("nan")
+
+        # --- T10_SOROS ---
         try:
-            h20 = float(h20); l20 = float(l20); h10 = float(h10); l10 = float(l10)
-        except (TypeError, ValueError):
-            h20 = l20 = h10 = l10 = np.nan
+            t10_candidates = []
+            # search impulse windows
+            for start in range(max(0, i - 12), i - 1):
+                for length in (1, 2, 3):
+                    end = start + length - 1
+                    if end > i - 3 or end >= i:
+                        continue
+                    if start < 0:
+                        continue
+                    try:
+                        zs = [float(df.iloc[k]["z_v"]) for k in range(start, end + 1)]
+                        opens = float(df.iloc[start]["Open"])
+                        closes = float(df.iloc[end]["Close"])
+                    except Exception:
+                        continue
+                    if any(not np.isfinite(z) for z in zs):
+                        continue
+                    if max(zs) <= 2.0:
+                        continue
+                    if abs(closes - opens) < 1.5 * atr:
+                        continue
+                    max_zv = max(zs)
+                    impulse_dir = 1 if closes > opens else -1
+                    # coil bars end+1 .. i
+                    coil_indices = list(range(end + 1, i + 1))
+                    if len(coil_indices) < 1:
+                        continue
+                    coil_high = max(float(df.iloc[k]["High"]) for k in coil_indices)
+                    coil_low = min(float(df.iloc[k]["Low"]) for k in coil_indices)
+                    impulse_range = abs(closes - opens) + 1e-9
+                    retracement = abs(close - closes) / impulse_range
+                    if retracement < 0.25 or retracement > 0.65:
+                        continue
+                    coil_vol_ratios = [float(df.iloc[k]["vol_ratio"]) for k in coil_indices]
+                    if any(not np.isfinite(x) for x in coil_vol_ratios):
+                        continue
+                    if float(np.mean(coil_vol_ratios)) >= 0.80:
+                        continue
+                    coil_ranges = [float(df.iloc[k]["High"]) - float(df.iloc[k]["Low"]) for k in coil_indices]
+                    if float(np.mean(coil_ranges)) > 1.2 * atr:
+                        continue
+                    # phase3
+                    if er10 < 0.30 or atr_ratio < 0.90:
+                        continue
+                    if impulse_dir > 0:
+                        if not (close > sma200 and ema9 >= ema30):
+                            continue
+                        if not (45 <= rsi <= 68):
+                            continue
+                    else:
+                        if not (close < sma200 and ema9 <= ema30):
+                            continue
+                        if not (32 <= rsi <= 55):
+                            continue
+                    # entry/stop
+                    if impulse_dir > 0:
+                        entry = coil_high
+                        stop = coil_low - 0.15 * atr
+                    else:
+                        entry = coil_low
+                        stop = coil_high + 0.15 * atr
+                    R = abs(entry - stop)
+                    if R < 0.20 * atr or R > 1.20 * atr:
+                        continue
+                    if impulse_dir > 0:
+                        target = entry + 4.2 * R
+                        direction = "long"
+                    else:
+                        target = entry - 4.2 * R
+                        direction = "short"
+                    score = 3.6 + 0.15 * min(max_zv, 5.0)
+                    s = build_signal(sym, market, tf, "T10_SOROS", direction, ts, entry, stop, target, score)
+                    if s:
+                        t10_candidates.append(s)
+            if t10_candidates:
+                # keep highest score
+                best = max(t10_candidates, key=lambda x: x["score"])
+                out.append(best)
+        except Exception:
+            pass
 
-        # MA7
-        if ema9 > ema30 > sma200 and close > sma200:
-            limit = ema30
-            stop = ema30 - 1.5 * atr
-            R = limit - stop
-            target = limit + 3.2 * R
-            s = build_signal(symbol, market, tf, "MA7", "long", ts, limit, stop, target, 2.6)
-            if s: out.append(s)
-        elif ema9 < ema30 < sma200 and close < sma200:
-            limit = ema30
-            stop = ema30 + 1.5 * atr
-            R = stop - limit
-            target = limit - 3.2 * R
-            s = build_signal(symbol, market, tf, "MA7", "short", ts, limit, stop, target, 2.6)
-            if s: out.append(s)
-
-        # F3 (1h/1d only)
-        if tf in ("1h", "1d"):
-            if np.isfinite(h20) and close > h20 and ema9 > ema30 > sma200:
-                limit = h20
-                ten_low = l10 if np.isfinite(l10) else limit - 1.6 * atr
-                stop = max(ten_low, limit - 1.6 * atr)
-                R = limit - stop
-                if R > 0:
-                    target = limit + 3.5 * R
-                    s = build_signal(symbol, market, tf, "F3", "long", ts, limit, stop, target, 2.7)
-                    if s: out.append(s)
-            if np.isfinite(l20) and close < l20 and ema9 < ema30 < sma200:
-                limit = l20
-                ten_high = h10 if np.isfinite(h10) else limit + 1.6 * atr
-                stop = min(ten_high, limit + 1.6 * atr)
-                R = stop - limit
-                if R > 0:
-                    target = limit - 3.5 * R
-                    s = build_signal(symbol, market, tf, "F3", "short", ts, limit, stop, target, 2.7)
-                    if s: out.append(s)
-
-        # F2 climax exhaustion
-        rng = high - low
-        if rng > 0:
-            stretch_down = (ema30 - close) / atr
-            if stretch_down > 2.6 and (not np.isnan(zv)) and zv > 2.2:
-                lower_wick = min(openp, close) - low
-                if lower_wick / rng >= 0.25:
-                    limit = close
-                    stop = low - 0.25 * atr
-                    R = limit - stop
-                    if R > 0:
-                        d = ema30 - limit
-                        d_clipped = min(max(d, 2.5 * R), 4.5 * R)
-                        target = limit + d_clipped
-                        s = build_signal(symbol, market, tf, "F2", "long", ts, limit, stop, target, 2.8)
-                        if s: out.append(s)
-            stretch_up = (close - ema30) / atr
-            if stretch_up > 2.6 and (not np.isnan(zv)) and zv > 2.2:
-                upper_wick = high - max(openp, close)
-                if upper_wick / rng >= 0.25:
-                    limit = close
-                    stop = high + 0.25 * atr
-                    R = stop - limit
-                    if R > 0:
-                        d = limit - ema30
-                        d_clipped = min(max(d, 2.5 * R), 4.5 * R)
-                        target = limit - d_clipped
-                        s = build_signal(symbol, market, tf, "F2", "short", ts, limit, stop, target, 2.8)
-                        if s: out.append(s)
-
-        # P3_v2
-        if np.isfinite(l20):
-            sweep = (l20 - low) / atr
-            if 0.1 <= sweep <= 1.2 and close > l20 and (not np.isnan(zv)) and zv > 1.2:
-                limit = l20
-                stop = low - 0.20 * atr
-                R = limit - stop
-                if R > 0:
-                    target = limit + 3.5 * R
-                    s = build_signal(symbol, market, tf, "P3_v2", "long", ts, limit, stop, target, 2.9)
-                    if s: out.append(s)
-        if np.isfinite(h20):
-            sweep = (high - h20) / atr
-            if 0.1 <= sweep <= 1.2 and close < h20 and (not np.isnan(zv)) and zv > 1.2:
-                if is_equity and close > sma200:
-                    pass
+        # --- F1_SOROS_MA ---
+        try:
+            f1_list = []
+            # prior impulse 5..12 bars ending at i-1
+            for length in range(5, 13):
+                start = i - length
+                end = i - 1
+                if start < 0:
+                    continue
+                try:
+                    opens = float(df.iloc[start]["Open"])
+                    closes = float(df.iloc[end]["Close"])
+                    zs = [float(df.iloc[k]["z_v"]) for k in range(start, end + 1)]
+                except Exception:
+                    continue
+                if any(not np.isfinite(z) for z in zs):
+                    continue
+                if max(zs) <= 1.8:
+                    continue
+                if abs(closes - opens) < 1.5 * atr:
+                    continue
+                impulse_dir = 1 if closes > opens else -1
+                impulse_range = abs(closes - opens) + 1e-9
+                # current bar pullback
+                pullback = abs(close - closes) / impulse_range
+                if pullback < 0.45 or pullback > 0.65:
+                    continue
+                if vol_ratio >= 0.85 or not np.isfinite(vol_ratio):
+                    continue
+                # touch ema30
+                if impulse_dir > 0:
+                    if not (low <= ema30 + 0.25 * atr and close >= ema30):
+                        continue
                 else:
-                    limit = h20
-                    stop = high + 0.20 * atr
-                    R = stop - limit
+                    if not (high >= ema30 - 0.25 * atr and close <= ema30):
+                        continue
+                # trend & rsi
+                if impulse_dir > 0:
+                    if not (ema30 > sma200 and sma200 > sma200_prev5):
+                        continue
+                    if not (40 <= rsi <= 62):
+                        continue
+                else:
+                    if not (ema30 < sma200 and sma200 < sma200_prev5):
+                        continue
+                    if not (38 <= rsi <= 60):
+                        continue
+                if impulse_dir > 0:
+                    stop = ema30 - 1.2 * atr
+                    entry = close
+                    R = abs(entry - stop)
+                    if R <= 0:
+                        continue
+                    target = entry + 3.8 * R
+                    direction = "long"
+                else:
+                    stop = ema30 + 1.2 * atr
+                    entry = close
+                    R = abs(entry - stop)
+                    if R <= 0:
+                        continue
+                    target = entry - 3.8 * R
+                    direction = "short"
+                s = build_signal(sym, market, tf, "F1_SOROS_MA", direction, ts, entry, stop, target, 3.3)
+                if s:
+                    f1_list.append(s)
+            if f1_list:
+                out.append(f1_list[0])
+        except Exception:
+            pass
+
+        # --- MA7_TRUE ---
+        try:
+            ma7_list = []
+            # long
+            if ema9 > ema30 > sma200 and sma200 > sma200_prev5:
+                # prior impulse within last 5 bars
+                prior_ok = False
+                for k in range(max(0, i - 5), i):
+                    try:
+                        if float(df.iloc[k]["High"]) - float(df.iloc[k]["ema30"]) >= 1.5 * atr:
+                            prior_ok = True
+                            break
+                    except Exception:
+                        pass
+                if prior_ok and low <= ema30 + 0.20 * atr and close > ema30:
+                    if 40 <= rsi <= 65:
+                        entry = ema30
+                        stop = min(sma200, ema30 - 1.5 * atr) - 0.1 * atr
+                        R = abs(entry - stop)
+                        if R > 1.8 * atr:
+                            stop = entry - 1.8 * atr
+                            R = abs(entry - stop)
+                        if R > 0:
+                            target = entry + 3.5 * R
+                            s = build_signal(sym, market, tf, "MA7_TRUE", "long", ts, entry, stop, target, 2.8)
+                            if s:
+                                ma7_list.append(s)
+            # short
+            if ema9 < ema30 < sma200 and sma200 < sma200_prev5:
+                prior_ok = False
+                for k in range(max(0, i - 5), i):
+                    try:
+                        if float(df.iloc[k]["ema30"]) - float(df.iloc[k]["Low"]) >= 1.5 * atr:
+                            prior_ok = True
+                            break
+                    except Exception:
+                        pass
+                if prior_ok and high >= ema30 - 0.20 * atr and close < ema30:
+                    if 35 <= rsi <= 60:
+                        entry = ema30
+                        stop = max(sma200, ema30 + 1.5 * atr) + 0.1 * atr
+                        R = abs(entry - stop)
+                        if R > 1.8 * atr:
+                            stop = entry + 1.8 * atr
+                            R = abs(entry - stop)
+                        if R > 0:
+                            target = entry - 3.5 * R
+                            s = build_signal(sym, market, tf, "MA7_TRUE", "short", ts, entry, stop, target, 2.8)
+                            if s:
+                                ma7_list.append(s)
+            if ma7_list:
+                out.append(ma7_list[0])
+        except Exception:
+            pass
+
+        # --- P3_SWEEP ---
+        try:
+            p3_list = []
+            # long
+            if np.isfinite(l20):
+                sweep = (l20 - low) / atr
+                if 0.10 <= sweep <= 1.20 and close > l20 and (not np.isnan(zv)) and zv > 1.3:
+                    if 30 <= rsi <= 58:
+                        trend_gate = (close >= 0.98 * sma200) or (np.isfinite(ema50) and np.isfinite(ema50_prev5) and ema50 > ema50_prev5)
+                        if trend_gate:
+                            entry = l20
+                            stop = low - 0.25 * atr
+                            R = abs(entry - stop)
+                            if R > 0:
+                                target = entry + 3.6 * R
+                                score = 3.1 + 0.1 * min(zv, 4.0)
+                                s = build_signal(sym, market, tf, "P3_SWEEP", "long", ts, entry, stop, target, score)
+                                if s:
+                                    p3_list.append(s)
+            # short
+            if np.isfinite(h20):
+                sweep = (high - h20) / atr
+                if 0.10 <= sweep <= 1.20 and close < h20 and (not np.isnan(zv)) and zv > 1.3:
+                    if 42 <= rsi <= 70:
+                        equity_bull = is_equity and close > sma200 and ema9 > ema30
+                        trend_gate = (close <= 1.02 * sma200) or (not equity_bull)
+                        if trend_gate:
+                            entry = h20
+                            stop = high + 0.25 * atr
+                            R = abs(entry - stop)
+                            if R > 0:
+                                target = entry - 3.6 * R
+                                score = 3.1 + 0.1 * min(zv, 4.0)
+                                s = build_signal(sym, market, tf, "P3_SWEEP", "short", ts, entry, stop, target, score)
+                                if s:
+                                    p3_list.append(s)
+            if p3_list:
+                out.append(p3_list[0])
+        except Exception:
+            pass
+
+        # --- F3_BREAKOUT ---
+        try:
+            f3_list = []
+            if tf in ("1h", "1d"):
+                # long
+                if (np.isfinite(h20) and close > h20 and ema9 > ema30 > sma200
+                        and sma200 > sma200_prev5 and (not np.isnan(zv)) and zv > 1.0
+                        and 50 <= rsi <= 70):
+                    entry = 0.5 * h20 + 0.5 * ema9
+                    stop = (min(l10, ema30) if (np.isfinite(l10)) else ema30) - 0.1 * atr
+                    # use min of l10 and ema30
+                    try:
+                        stop = min(l10, ema30) - 0.1 * atr
+                    except Exception:
+                        stop = ema30 - 0.1 * atr
+                    R = abs(entry - stop)
                     if R > 0:
-                        target = limit - 3.5 * R
-                        s = build_signal(symbol, market, tf, "P3_v2", "short", ts, limit, stop, target, 2.9)
-                        if s: out.append(s)
+                        target = entry + 3.8 * R
+                        score = 2.75 + 0.1 * min(zv, 4.0)
+                        s = build_signal(sym, market, tf, "F3_BREAKOUT", "long", ts, entry, stop, target, score)
+                        if s:
+                            f3_list.append(s)
+                # short
+                if (np.isfinite(l20) and close < l20 and ema9 < ema30 < sma200
+                        and sma200 < sma200_prev5 and (not np.isnan(zv)) and zv > 1.0
+                        and 30 <= rsi <= 50):
+                    entry = 0.5 * l20 + 0.5 * ema9
+                    try:
+                        stop = max(h10, ema30) + 0.1 * atr
+                    except Exception:
+                        stop = ema30 + 0.1 * atr
+                    R = abs(entry - stop)
+                    if R > 0:
+                        target = entry - 3.8 * R
+                        score = 2.75 + 0.1 * min(zv, 4.0)
+                        s = build_signal(sym, market, tf, "F3_BREAKOUT", "short", ts, entry, stop, target, score)
+                        if s:
+                            f3_list.append(s)
+            if f3_list:
+                out.append(f3_list[0])
+        except Exception:
+            pass
 
-        # E1 impulse
-        if rng >= 1.6 * atr and (not np.isnan(zv)) and zv > 1.6:
-            if close > openp:
-                limit = (high + low) / 2.0
-                stop = low - 0.15 * atr
-                R = limit - stop
-                if R > 0:
-                    target = limit + 3.2 * R
-                    s = build_signal(symbol, market, tf, "E1", "long", ts, limit, stop, target, 2.5)
-                    if s: out.append(s)
-            else:
-                limit = (high + low) / 2.0
-                stop = high + 0.15 * atr
-                R = stop - limit
-                if R > 0:
-                    target = limit - 3.2 * R
-                    s = build_signal(symbol, market, tf, "E1", "short", ts, limit, stop, target, 2.5)
-                    if s: out.append(s)
+    # keep single highest-score signal per (sym, tf)
+    if not out:
+        return []
+    if keep_all:
+        return out
+    best = max(out, key=lambda x: x["score"])
+    return [best]
 
-    return out
+
+# ---- Risk / Elder helpers ----
+def get_s_min(k):
+    k = int(k) if k is not None else 0
+    a = 2.6 + 0.45 * k
+    b = 2.0 + 0.75 * k
+    return max(a, b)
+
+
+def s_min_floor(k):
+    return get_s_min(k)
+
+
+def get_min_rr(k):
+    k = int(k) if k is not None else 0
+    return 3.2 + 0.4 * k
+
+
+def enforce_risk_pct(ledger):
+    acct = ledger.setdefault("account", {})
+    rp = acct.get("risk_pct", 0.02)
+    try:
+        rp = float(rp)
+    except (TypeError, ValueError):
+        rp = 0.02
+    acct["risk_pct"] = min(rp, MAX_RISK_PCT)
+    if acct["risk_pct"] <= 0:
+        acct["risk_pct"] = 0.02
+    if "equity" not in acct:
+        acct["equity"] = 100.0
+    if "target" not in acct:
+        acct["target"] = 1000.0
+    if "month_start_equity" not in acct:
+        acct["month_start_equity"] = float(acct.get("equity", 100.0))
+    if "current_month" not in acct:
+        acct["current_month"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m")
+    return ledger
+
+
+def update_block_stats(ledger):
+    bs = ledger.setdefault("block_stats", {})
+    acct = ledger.setdefault("account", {})
+    bs.setdefault("consecutive_losses", 0)
+    bs.setdefault("blocked", False)
+    bs.setdefault("cooldowns", [])
+    equity = float(acct.get("equity", 100.0))
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
+    now_month = now_utc.strftime("%Y-%m")
+    prev_month = acct.get("current_month")
+    if prev_month is None:
+        acct["current_month"] = now_month
+    elif prev_month != now_month:
+        acct["current_month"] = now_month
+        acct["month_start_equity"] = equity
+        bs["consecutive_losses"] = 0
+        bs["blocked"] = False
+        bs.pop("block_reason", None)
+    month_start = float(acct.get("month_start_equity", 100.0))
+    if month_start <= 0:
+        month_start = 100.0
+        acct["month_start_equity"] = month_start
+    dd = (month_start - equity) / month_start
+    bs["monthly_dd_pct"] = float(dd)
+    k = int(bs.get("consecutive_losses", 0))
+    bs["s_min_current"] = float(get_s_min(k))
+    blocked = False
+    reason = None
+    if dd >= 0.06:
+        blocked = True
+        reason = "ELDER_6PCT_PIRANHA_GUARD"
+    if k >= 3:
+        blocked = True
+        reason = "ELDER_6PCT_PIRANHA_GUARD"
+    bs["blocked"] = blocked
+    if blocked:
+        bs["block_reason"] = reason
+    else:
+        bs.pop("block_reason", None)
+    return ledger
 
 
 def load_ledger():
     if LEDGER_PATH.exists():
         try:
-            return json.loads(LEDGER_PATH.read_text(encoding="utf-8"))
+            L = json.loads(LEDGER_PATH.read_text(encoding="utf-8"))
+            enforce_risk_pct(L)
+            update_block_stats(L)
+            return L
         except Exception:
             pass
-    return {
-        "account": {"equity": 100.0, "risk_pct": 0.05, "target": 1000.0},
+    L = {
+        "account": {"equity": 100.0, "risk_pct": 0.02, "target": 1000.0, "month_start_equity": 100.0, "current_month": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m")},
         "open_positions": [],
         "pending_orders": [],
         "closed_trades": [],
-        "block_stats": {"consecutive_losses": 0, "blocked": False},
+        "block_stats": {"consecutive_losses": 0, "blocked": False, "cooldowns": [], "s_min_current": 2.6, "monthly_dd_pct": 0.0},
         "last_run": None,
     }
+    enforce_risk_pct(L)
+    update_block_stats(L)
+    return L
 
 
 def bars_after(df, time_str):
@@ -323,15 +692,18 @@ def bars_after(df, time_str):
         mask = df["Time"].astype(str) > str(time_str)
         return df[mask]
     except Exception:
-        return df.iloc[0:0]
+        try:
+            return df[df.index.astype(str) > str(time_str)]
+        except Exception:
+            return df.iloc[0:0]
 
 
 def try_fill(order, df):
-    tf_sec = TF_SEC[order["tf"]]
+    tf_sec = TF_SEC.get(order["tf"], 3600)
     bars = bars_after(df, order["placed_bar_time"])
     for _, bar in bars.iterrows():
         H = float(bar["High"]); L = float(bar["Low"])
-        buf = 0.15 * (H - L) * math.sqrt(2.0 / tf_sec)
+        buf = 0.15 * (H - L) * math.sqrt(2.0 / tf_sec) if (H - L) > 0 else 0.0
         if order["direction"] == "long":
             if L <= order["limit_price"] - buf:
                 return True, str(bar["Time"]), float(order["limit_price"])
@@ -346,25 +718,129 @@ def is_rejected(order_id, entry_time):
     return h < 0.02
 
 
+def _cooldown_hours(tf):
+    if tf == "1d":
+        return 48.0
+    if tf == "1h":
+        return 6.0
+    return (TF_SEC.get(tf, 3600) * 5) / 3600.0
+
+
+def record_cooldown(ledger, symbol, direction, tf, exit_time_str):
+    exit_ts = _ts_naive(exit_time_str)
+    if exit_ts is None:
+        return
+    delta = pd.Timedelta(hours=_cooldown_hours(tf))
+    until = exit_ts + delta
+    ct_list = ledger.setdefault("block_stats", {}).setdefault("cooldowns", [])
+    ct_list.append({"symbol": symbol, "direction": direction, "tf": tf, "until": str(until)})
+    # keep bounded
+    if len(ct_list) > 500:
+        del ct_list[:-500]
+
+
+def _ts_naive(x):
+    if x is None:
+        return None
+    try:
+        ts = pd.Timestamp(x)
+    except Exception:
+        return None
+    try:
+        if getattr(ts, "tzinfo", None) is not None:
+            ts = ts.tz_localize(None)
+    except Exception:
+        try:
+            ts = pd.Timestamp(x).tz_localize(None)
+        except Exception:
+            pass
+    return ts
+
+
+def in_cooldown(ledger, symbol, direction, when_time_str, tf=None):
+    when = _ts_naive(when_time_str)
+    if when is None:
+        return False
+    # block_stats cooldowns
+    for cd in ledger.get("block_stats", {}).get("cooldowns", []):
+        if cd.get("symbol") == symbol and cd.get("direction") == direction:
+            until = _ts_naive(cd.get("until"))
+            if until is not None and when <= until:
+                return True
+            # fallback seconds check against stored until
+            try:
+                if until is not None and (when - until).total_seconds() < 0:
+                    return True
+            except Exception:
+                pass
+    # closed trades
+    for ct in ledger.get("closed_trades", []):
+        if ct.get("symbol") == symbol and ct.get("direction") == direction:
+            if (ct.get("pnl_r", 0) or 0) < 0:
+                hours = _cooldown_hours(ct.get("tf", tf or "1d"))
+                exit_ts = _ts_naive(ct.get("exit_time"))
+                cu = ct.get("cooldown_until")
+                expiry = _ts_naive(cu) if cu is not None else None
+                if expiry is None and exit_ts is not None:
+                    expiry = exit_ts + pd.Timedelta(hours=hours)
+                    try:
+                        ct["cooldown_until"] = str(expiry)
+                    except Exception:
+                        pass
+                if expiry is not None and when <= expiry:
+                    return True
+                if exit_ts is not None:
+                    if when <= exit_ts:
+                        return True
+                    try:
+                        if (when - exit_ts).total_seconds() < hours * 3600:
+                            return True
+                    except Exception:
+                        pass
+    return False
+
+
+def cooldown_active(ledger, symbol, direction, when_time_str, tf=None):
+    return in_cooldown(ledger, symbol, direction, when_time_str, tf)
+
+
 def step_a_update_positions(ledger, data):
     open_positions = ledger["open_positions"]
     for pos in list(open_positions):
         df = data.get((pos["symbol"], pos["tf"]))
         if df is None:
-            # mark to market with nothing; skip
             continue
         bars = bars_after(df, pos["entry_time"])
         exited = False
+        exit_price = None
+        reason = None
         cost_pct, slip_pct = get_costs(pos["market"])
+        risk_price = (pos["entry_price"] - pos["initial_stop"]) if pos["direction"] == "long" else (pos["initial_stop"] - pos["entry_price"])
+        if risk_price <= 0:
+            continue
         for _, bar in bars.iterrows():
             H = float(bar["High"]); L = float(bar["Low"]); C = float(bar["Close"])
+            bar_time = str(bar["Time"])
             if pos["direction"] == "long":
-                risk_price = pos["entry_price"] - pos["initial_stop"]
-                if risk_price <= 0:
-                    break
                 unreal_r = (C - pos["entry_price"]) / risk_price
+                # ratchet
                 if unreal_r >= 1.2:
-                    new_stop = pos["entry_price"] + 0.25 * risk_price
+                    new_stop = pos["entry_price"] + 0.30 * risk_price
+                    if new_stop > pos["stop_price"]:
+                        pos["stop_price"] = new_stop
+                if unreal_r >= 2.2:
+                    arch = pos.get("arch", "")
+                    if arch in ("F3_BREAKOUT", "T10_SOROS"):
+                        # chandelier: need highest high since entry
+                        try:
+                            hh = float(bars.loc[:bar.name, "High"].max()) if False else None
+                        except Exception:
+                            hh = None
+                        if hh is None:
+                            hh = H
+                        new_stop = max(pos["stop_price"], hh - 2.0 * (pos.get("atr") or risk_price))
+                    else:
+                        new_stop = pos["entry_price"] + 1.20 * risk_price
                     if new_stop > pos["stop_price"]:
                         pos["stop_price"] = new_stop
                 if L <= pos["stop_price"]:
@@ -372,12 +848,18 @@ def step_a_update_positions(ledger, data):
                 elif H >= pos["target_price"]:
                     exit_price = pos["target_price"]; reason = "target"; exited = True
             else:
-                risk_price = pos["initial_stop"] - pos["entry_price"]
-                if risk_price <= 0:
-                    break
                 unreal_r = (pos["entry_price"] - C) / risk_price
                 if unreal_r >= 1.2:
-                    new_stop = pos["entry_price"] - 0.25 * risk_price
+                    new_stop = pos["entry_price"] - 0.30 * risk_price
+                    if new_stop < pos["stop_price"]:
+                        pos["stop_price"] = new_stop
+                if unreal_r >= 2.2:
+                    arch = pos.get("arch", "")
+                    if arch in ("F3_BREAKOUT", "T10_SOROS"):
+                        ll = L
+                        new_stop = min(pos["stop_price"], ll + 2.0 * risk_price)
+                    else:
+                        new_stop = pos["entry_price"] - 1.20 * risk_price
                     if new_stop < pos["stop_price"]:
                         pos["stop_price"] = new_stop
                 if H >= pos["stop_price"]:
@@ -386,82 +868,154 @@ def step_a_update_positions(ledger, data):
                     exit_price = pos["target_price"]; reason = "target"; exited = True
 
             if exited:
-                if pos["direction"] == "long":
-                    pnl_r = (exit_price - pos["entry_price"]) / risk_price
-                else:
-                    pnl_r = (pos["entry_price"] - exit_price) / risk_price
-                # deduct costs
-                extra_slip = slip_pct if reason == "stop" else 0.0
-                cost_r = (cost_pct + extra_slip) * pos["entry_price"] / risk_price
-                pnl_r -= cost_r
-                ledger["account"]["equity"] += pnl_r * pos["risk_capital"]
-                bs = ledger["block_stats"]
-                if pnl_r > 0:
-                    bs["consecutive_losses"] = 0
-                    bs["blocked"] = False
-                else:
-                    bs["consecutive_losses"] = bs.get("consecutive_losses", 0) + 1
-                    if bs["consecutive_losses"] >= 4:
-                        bs["blocked"] = True
-                ledger["closed_trades"].append({
-                    "order_id": pos["order_id"],
-                    "symbol": pos["symbol"],
-                    "market": pos["market"],
-                    "tf": pos["tf"],
-                    "arch": pos["arch"],
-                    "direction": pos["direction"],
-                    "entry_time": pos["entry_time"],
-                    "exit_time": str(bar["Time"]),
-                    "entry_price": pos["entry_price"],
-                    "exit_price": float(exit_price),
-                    "pnl_r": round(float(pnl_r), 4),
-                    "reason": reason,
-                })
-                open_positions.remove(pos)
                 break
 
-        if exited:
+        if not exited:
+            # mark to market only
+            if len(bars) > 0:
+                last = bars.iloc[-1]
+            else:
+                last = df.iloc[-1]
+            C = float(last["Close"])
+            if pos["direction"] == "long":
+                if risk_price > 0:
+                    pos["unrealized_r"] = (C - pos["entry_price"]) / risk_price
+            else:
+                if risk_price > 0:
+                    pos["unrealized_r"] = (pos["entry_price"] - C) / risk_price
             continue
-        # mark to market
-        if len(bars) > 0:
-            last = bars.iloc[-1]
-        else:
-            last = df.iloc[-1]
-        C = float(last["Close"])
+
+        # exited
         if pos["direction"] == "long":
-            risk_price = pos["entry_price"] - pos["initial_stop"]
-            if risk_price > 0:
-                pos["unrealized_r"] = (C - pos["entry_price"]) / risk_price
+            pnl_r = (exit_price - pos["entry_price"]) / risk_price
         else:
-            risk_price = pos["initial_stop"] - pos["entry_price"]
-            if risk_price > 0:
+            pnl_r = (pos["entry_price"] - exit_price) / risk_price
+        extra_slip = slip_pct if reason == "stop" else 0.0
+        cost_r = (cost_pct + extra_slip) * pos["entry_price"] / risk_price
+        pnl_r -= cost_r
+        ledger["account"]["equity"] += pnl_r * pos["risk_capital"]
+        bs = ledger["block_stats"]
+        if pnl_r > 0:
+            bs["consecutive_losses"] = 0
+            bs["blocked"] = False
+        else:
+            bs["consecutive_losses"] = bs.get("consecutive_losses", 0) + 1
+        # cooldown on loss
+        if pnl_r < 0:
+            record_cooldown(ledger, pos["symbol"], pos["direction"], pos["tf"], str(bar["Time"]) if exited else pos["entry_time"])
+        ledger["closed_trades"].append({
+            "order_id": pos["order_id"],
+            "symbol": pos["symbol"],
+            "market": pos["market"],
+            "tf": pos["tf"],
+            "arch": pos["arch"],
+            "direction": pos["direction"],
+            "entry_time": pos["entry_time"],
+            "exit_time": str(bar["Time"]) if exited else None,
+            "entry_price": pos["entry_price"],
+            "exit_price": float(exit_price),
+            "pnl_r": round(float(pnl_r), 4),
+            "reason": reason,
+            "cooldown_until": None,
+        })
+        # set cooldown_until
+        try:
+            exit_ts = pd.Timestamp(bar["Time"])
+            delta = pd.Timedelta(hours=_cooldown_hours(pos["tf"]))
+            ledger["closed_trades"][-1]["cooldown_until"] = str(exit_ts + delta)
+        except Exception:
+            pass
+        open_positions.remove(pos)
+        update_block_stats(ledger)
+
+    # mark-to-market remaining
+    for pos in open_positions:
+        df = data.get((pos["symbol"], pos["tf"]))
+        if df is None or (hasattr(df, "empty") and df.empty):
+            continue
+        last = df.iloc[-1]
+        C = float(last["Close"])
+        risk_price = (pos["entry_price"] - pos["initial_stop"]) if pos["direction"] == "long" else (pos["initial_stop"] - pos["entry_price"])
+        if risk_price > 0:
+            if pos["direction"] == "long":
+                pos["unrealized_r"] = (C - pos["entry_price"]) / risk_price
+            else:
                 pos["unrealized_r"] = (pos["entry_price"] - C) / risk_price
 
 
-def step_b_pending(ledger, data, open_positions):
-    still_pending = []
+def step_b_fill_pending(ledger, data, open_positions=None):
+    if open_positions is None:
+        open_positions = ledger["open_positions"]
+    k = int(ledger.get("block_stats", {}).get("consecutive_losses", 0))
+    s_min = get_s_min(k)
+    min_rr = get_min_rr(k)
+    # normalize rr on pending orders
+    for order in ledger.get("pending_orders", []):
+        if "rr" not in order:
+            try:
+                r = abs(float(order["limit_price"]) - float(order["stop_price"]))
+                order["rr"] = round(abs(float(order["target_price"]) - float(order["limit_price"])) / r, 4) if r > 0 else 0.0
+            except Exception:
+                order["rr"] = 0.0
+    # purge orders that no longer meet risk thresholds after a loss
+    filtered_pending = []
+    for order in ledger.get("pending_orders", []):
+        if float(order.get("score", 0.0)) < s_min or float(order.get("rr", 0.0)) < min_rr:
+            continue
+        filtered_pending.append(order)
+    ledger["pending_orders"] = filtered_pending
+
+    # dedup pending by symbol (keep highest score) and cap
+    # expire old (>3 bars)
+    new_pending = []
     for order in ledger["pending_orders"]:
+        df = data.get((order["symbol"], order["tf"]))
+        if df is not None:
+            bars = bars_after(df, order["placed_bar_time"])
+            if len(bars) > 3:
+                continue
+        new_pending.append(order)
+    ledger["pending_orders"] = new_pending
+
+    # dedup per symbol keep highest score
+    by_symbol = {}
+    for order in ledger["pending_orders"]:
+        sym = order["symbol"]
+        if sym not in by_symbol or order.get("score", 0) > by_symbol[sym].get("score", 0):
+            by_symbol[sym] = order
+    deduped = list(by_symbol.values())
+    # cap global 8 by score
+    deduped.sort(key=lambda x: x.get("score", 0), reverse=True)
+    deduped = deduped[:MAX_PENDING_GLOBAL]
+    ledger["pending_orders"] = deduped
+
+    # now process fills
+    still_pending = []
+    # sort by score desc for fill priority
+    ordered = sorted(ledger["pending_orders"], key=lambda x: x.get("score", 0), reverse=True)
+    for order in ordered:
+        if float(order.get("score", 0.0)) < s_min or float(order.get("rr", 0.0)) < min_rr:
+            continue
         df = data.get((order["symbol"], order["tf"]))
         if df is None:
             still_pending.append(order)
             continue
         bars = bars_after(df, order["placed_bar_time"])
-        # expire older than 10 bars
-        if len(bars) > 10:
+        if len(bars) > 3:
             continue
         filled, entry_time, entry_price = try_fill(order, df)
         if not filled:
             still_pending.append(order)
             continue
-        # rejection check
         if is_rejected(order["order_id"], entry_time):
             continue
-        # market space
-        market_positions = [p for p in open_positions if p["market"] == order["market"]]
-        if len(market_positions) >= 1:
+        if ledger["block_stats"].get("blocked"):
             still_pending.append(order)
             continue
-        if ledger["block_stats"].get("blocked"):
+        if in_cooldown(ledger, order["symbol"], order["direction"], entry_time, order["tf"]):
+            # blocked by cooldown; drop from pending
+            continue
+        if len(open_positions) >= MAX_OPEN_POSITIONS:
             still_pending.append(order)
             continue
         risk_price = abs(entry_price - order["stop_price"])
@@ -486,7 +1040,30 @@ def step_b_pending(ledger, data, open_positions):
             "seal_sha256": order.get("seal_sha256"),
         }
         open_positions.append(pos)
-    ledger["pending_orders"] = still_pending
+        # once filled, do not fill more (global lock)
+        # mark remaining pending kept
+    # rebuild still_pending excluding filled
+    filled_ids = {p["order_id"] for p in open_positions}
+    # Actually open_positions may include pre-existing; track by processing. Simpler: keep pending not filled.
+    # We appended to still_pending during loop only non-filled. But if global lock blocked, we appended. Good.
+    # However still_pending currently contains non-filled appended. But we iterated ordered; need ensure no duplicates.
+    # Reconstruct pending as still_pending filtered to deduped set.
+    seen = set()
+    final_pending = []
+    for o in still_pending:
+        if o["order_id"] in seen:
+            continue
+        seen.add(o["order_id"])
+        final_pending.append(o)
+    # cap again
+    final_pending.sort(key=lambda x: x.get("score", 0), reverse=True)
+    final_pending = final_pending[:MAX_PENDING_GLOBAL]
+    ledger["pending_orders"] = final_pending
+    ledger["open_positions"] = open_positions
+
+
+# alias
+step_b_pending = step_b_fill_pending
 
 
 def main():
@@ -494,7 +1071,6 @@ def main():
     LEDGER_PATH.parent.mkdir(parents=True, exist_ok=True)
     (ROOT / "dashboard").mkdir(parents=True, exist_ok=True)
 
-    # fetch data
     data = {}
     tasks = []
     for market, info in WATCHLIST.items():
@@ -514,21 +1090,16 @@ def main():
 
     ledger = load_ledger()
     open_positions = ledger["open_positions"]
-    # ensure list
     if not isinstance(open_positions, list):
         open_positions = []
         ledger["open_positions"] = open_positions
+    enforce_risk_pct(ledger)
+    update_block_stats(ledger)
 
-    # Step A
+    step_a_update_positions(ledger, data)
+    step_b_fill_pending(ledger, data, open_positions)
     step_a_update_positions(ledger, data)
 
-    # Step B
-    step_b_pending(ledger, data, open_positions)
-
-    # Step A (re-run after Step B fills: check stops/targets/ratchet on all bars after each fill bar)
-    step_a_update_positions(ledger, data)
-
-    # Step C: scan signals
     existing_ids = set()
     for o in ledger["pending_orders"]:
         existing_ids.add(o["order_id"])
@@ -538,16 +1109,30 @@ def main():
         existing_ids.add(c["order_id"])
 
     all_signals = []
+    k = ledger["block_stats"].get("consecutive_losses", 0)
+    s_min = get_s_min(k)
+    min_rr = get_min_rr(k)
+    blocked = ledger["block_stats"].get("blocked", False)
+
     for market, info in WATCHLIST.items():
         for symbol in info["symbols"]:
             for tf in info["tfs"]:
                 df = data.get((symbol, tf))
                 if df is None:
                     continue
-                sigs = run_detectors(symbol, market, tf, df)
-                all_signals.extend(sigs)
+                sigs = run_detectors(symbol, df, tf, market)
+                for sig in sigs:
+                    if sig["score"] < s_min:
+                        continue
+                    if float(sig.get("rr", 0.0)) < min_rr:
+                        continue
+                    if blocked:
+                        continue
+                    if in_cooldown(ledger, sig["symbol"], sig["direction"], sig["placed_bar_time"], sig["tf"]):
+                        continue
+                    all_signals.append(sig)
 
-    # dedupe by order_id preserving first
+    # dedupe by order_id
     seen = set()
     uniq = []
     for s in all_signals:
@@ -556,19 +1141,21 @@ def main():
         seen.add(s["order_id"])
         uniq.append(s)
 
-    blocked = ledger["block_stats"].get("blocked", False)
     for sig in uniq:
         if sig["order_id"] in existing_ids:
             continue
-        if blocked:
+        if float(sig.get("score", 0.0)) < get_s_min(k) or float(sig.get("rr", 0.0)) < get_min_rr(k):
             continue
         df = data.get((sig["symbol"], sig["tf"]))
         if df is None:
             continue
-        market_positions = [p for p in open_positions if p["market"] == sig["market"]]
-        # try immediate fill
+        # global single position
+        if len(open_positions) >= MAX_OPEN_POSITIONS:
+            # queue as pending instead
+            pass
+        market_positions = open_positions  # global
         filled, entry_time, entry_price = try_fill(sig, df)
-        if filled and not is_rejected(sig["order_id"], entry_time) and len(market_positions) < 1:
+        if filled and not is_rejected(sig["order_id"], entry_time) and len(open_positions) < MAX_OPEN_POSITIONS and not ledger["block_stats"].get("blocked"):
             risk_price = abs(entry_price - sig["stop_price"])
             if risk_price > 0:
                 equity = ledger["account"]["equity"]
@@ -595,31 +1182,49 @@ def main():
         ledger["pending_orders"].append(sig)
         existing_ids.add(sig["order_id"])
 
-    # Step A (re-run after Step C fills: check stops/targets/ratchet on all bars after each fill bar)
+    # cleanup + dedup pending
+    # expire old
+    new_pending = []
+    for order in ledger["pending_orders"]:
+        df = data.get((order["symbol"], order["tf"]))
+        if df is not None:
+            bars = bars_after(df, order["placed_bar_time"])
+            if len(bars) > 3:
+                continue
+        new_pending.append(order)
+    ledger["pending_orders"] = new_pending
+    # dedup per symbol keep highest score
+    by_symbol = {}
+    for order in ledger["pending_orders"]:
+        sym = order["symbol"]
+        if sym not in by_symbol or order.get("score", 0) > by_symbol[sym].get("score", 0):
+            by_symbol[sym] = order
+    deduped = list(by_symbol.values())
+    deduped.sort(key=lambda x: x.get("score", 0), reverse=True)
+    deduped = deduped[:MAX_PENDING_GLOBAL]
+    ledger["pending_orders"] = deduped
+
     step_a_update_positions(ledger, data)
 
-    # mark-to-market unrealized R for all open positions
+    # mark-to-market
     for pos in open_positions:
         df = data.get((pos["symbol"], pos["tf"]))
-        if df is None or df.empty:
+        if df is None or (hasattr(df, "empty") and df.empty):
             continue
         last = df.iloc[-1]
         C = float(last["Close"])
-        if pos["direction"] == "long":
-            risk_price = pos["entry_price"] - pos["initial_stop"]
-            if risk_price > 0:
+        risk_price = (pos["entry_price"] - pos["initial_stop"]) if pos["direction"] == "long" else (pos["initial_stop"] - pos["entry_price"])
+        if risk_price > 0:
+            if pos["direction"] == "long":
                 pos["unrealized_r"] = (C - pos["entry_price"]) / risk_price
-        else:
-            risk_price = pos["initial_stop"] - pos["entry_price"]
-            if risk_price > 0:
+            else:
                 pos["unrealized_r"] = (pos["entry_price"] - C) / risk_price
     ledger["open_positions"] = open_positions
     ledger["last_run"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    update_block_stats(ledger)
 
-    # save ledger
     LEDGER_PATH.write_text(json.dumps(ledger, indent=2, default=str), encoding="utf-8")
 
-    # write markdown + html
     write_status(ledger)
     print(f"done in {time.time()-t0:.1f}s | open={len(open_positions)} pending={len(ledger['pending_orders'])} closed={len(ledger['closed_trades'])}")
 
@@ -674,7 +1279,6 @@ def write_status(ledger):
     lines.append("")
     STATUS_MD.write_text("\n".join(lines), encoding="utf-8")
 
-    # html
     html = ["<html><head><title>Live Forward Scanner</title></head><body>"]
     html.append(f"<h1>Live Forward Scanner</h1><p>Last run: {ledger['last_run']}</p>")
     html.append(f"<p>Equity: ${acct['equity']:.2f} | Open: {len(ledger['open_positions'])} | "
