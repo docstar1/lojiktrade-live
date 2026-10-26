@@ -389,6 +389,70 @@ def test_10_pending_cap_schema():
     print("Test 10 PASS")
 
 
+# Test 11
+def test_11_no_retroactive_fill_and_min_rr():
+    n = 80
+    closes = [100.0 + i * 0.1 for i in range(n)]
+    df = make_df(closes)
+    sigs = sw.run_detectors("HAL.NS", df, "1d", "IndiaNSE", keep_all=True)
+    # if any signal, placed on latest bar
+    for s in sigs:
+        assert s["placed_bar_time"] == str(df.iloc[-1]["Time"]), (s["placed_bar_time"], str(df.iloc[-1]["Time"]))
+    # try_fill on same bar should not fill
+    if sigs:
+        sig = sigs[0]
+        filled, et, ep = sw.try_fill(sig, df, "1d")
+        assert filled is False and et is None and ep is None, (filled, et, ep)
+    # update_block_stats populates min_rr_current
+    L = _base_ledger()
+    sw.update_block_stats(L)
+    assert "min_rr_current" in L["block_stats"], L["block_stats"]
+    assert L["block_stats"]["min_rr_current"] == round(sw.get_min_rr(int(L["block_stats"].get("consecutive_losses",0))),4)
+    print("Test 11 PASS")
+
+
+# Test 12
+def test_12_chandelier_ratchet():
+    import pandas as pd
+    n = 5
+    times = [f"2026-01-{i+1:02d} 00:00:00" for i in range(n)]
+    closes = [100.0] * n
+    highs = [100.0] * n
+    lows = [99.0] * n
+    # bars after entry: last bar High 108, atr 2.0
+    highs[-1] = 108.0
+    lows[-1] = 107.0
+    closes[-1] = 107.5
+    df = make_df(closes, highs=highs, lows=lows, times=times)
+    # set atr=2.0 on all bars
+    for i in range(n):
+        df.iloc[i, df.columns.get_loc("atr")] = 2.0
+        df.iloc[i, df.columns.get_loc("ATR")] = 2.0
+    entry_time = times[1]
+    pos = {
+        "order_id": "HAL.NS|1d|T10_SOROS|long|t",
+        "symbol": "HAL.NS",
+        "market": "IndiaNSE",
+        "tf": "1d",
+        "arch": "T10_SOROS",
+        "direction": "long",
+        "entry_time": entry_time,
+        "entry_price": 100.0,
+        "stop_price": 97.0,
+        "initial_stop": 97.0,
+        "target_price": 112.6,
+        "risk_capital": 2.0,
+        "unrealized_r": 0.0,
+        "seal_sha256": "x",
+    }
+    L = _base_ledger()
+    L["open_positions"] = [pos]
+    data = {("HAL.NS", "1d"): df}
+    sw.step_a_update_positions(L, data)
+    assert abs(L["open_positions"][0]["stop_price"] - 104.0) < 1e-9, L["open_positions"][0]["stop_price"]
+    print("Test 12 PASS")
+
+
 if __name__ == "__main__":
     test_1_no_e1()
     test_2_ma7_true()
@@ -400,4 +464,6 @@ if __name__ == "__main__":
     test_8_global_single_position()
     test_9_cooldown()
     test_10_pending_cap_schema()
-    print("ALL 10 TESTS PASSED")
+    test_11_no_retroactive_fill_and_min_rr()
+    test_12_chandelier_ratchet()
+    print("ALL 12 TESTS PASSED")

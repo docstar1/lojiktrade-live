@@ -245,8 +245,8 @@ def run_detectors(sym, df, tf, market=None, keep_all=False):
     if n < 5:
         return out
     is_equity = market in ("IndiaNSE", "US")
-    # evaluate last 2 bars max
-    for ii in range(max(0, n - 2), n):
+    # evaluate ONLY the latest bar
+    for ii in [n - 1]:
         i = ii
         try:
             close = _safe(df, i, "Close")
@@ -649,6 +649,7 @@ def update_block_stats(ledger):
     bs["monthly_dd_pct"] = float(dd)
     k = int(bs.get("consecutive_losses", 0))
     bs["s_min_current"] = float(get_s_min(k))
+    bs["min_rr_current"] = round(get_min_rr(k), 4)
     blocked = False
     reason = None
     if dd >= 0.06:
@@ -679,7 +680,7 @@ def load_ledger():
         "open_positions": [],
         "pending_orders": [],
         "closed_trades": [],
-        "block_stats": {"consecutive_losses": 0, "blocked": False, "cooldowns": [], "s_min_current": 2.6, "monthly_dd_pct": 0.0},
+        "block_stats": {"consecutive_losses": 0, "blocked": False, "cooldowns": [], "s_min_current": 2.6, "min_rr_current": 3.2, "monthly_dd_pct": 0.0},
         "last_run": None,
     }
     enforce_risk_pct(L)
@@ -698,8 +699,9 @@ def bars_after(df, time_str):
             return df.iloc[0:0]
 
 
-def try_fill(order, df):
-    tf_sec = TF_SEC.get(order["tf"], 3600)
+def try_fill(order, df, tf=None):
+    otf = tf if tf is not None else order["tf"]
+    tf_sec = TF_SEC.get(otf, 3600)
     bars = bars_after(df, order["placed_bar_time"])
     for _, bar in bars.iterrows():
         H = float(bar["High"]); L = float(bar["Low"])
@@ -818,7 +820,7 @@ def step_a_update_positions(ledger, data):
         risk_price = (pos["entry_price"] - pos["initial_stop"]) if pos["direction"] == "long" else (pos["initial_stop"] - pos["entry_price"])
         if risk_price <= 0:
             continue
-        for _, bar in bars.iterrows():
+        for bar_idx, (_, bar) in enumerate(bars.iterrows()):
             H = float(bar["High"]); L = float(bar["Low"]); C = float(bar["Close"])
             bar_time = str(bar["Time"])
             if pos["direction"] == "long":
@@ -830,15 +832,21 @@ def step_a_update_positions(ledger, data):
                         pos["stop_price"] = new_stop
                 if unreal_r >= 2.2:
                     arch = pos.get("arch", "")
-                    if arch in ("F3_BREAKOUT", "T10_SOROS"):
-                        # chandelier: need highest high since entry
+                    sub = bars.iloc[:bar_idx + 1]
+                    highest_high = max(float(r["High"]) for _, r in sub.iterrows())
+                    lowest_low = min(float(r["Low"]) for _, r in sub.iterrows())
+                    try:
+                        atr_val = float(bar.get("atr", risk_price)) if hasattr(bar, "get") else float(bar["atr"])
+                    except Exception:
                         try:
-                            hh = float(bars.loc[:bar.name, "High"].max()) if False else None
+                            atr_val = float(bar["atr"])
                         except Exception:
-                            hh = None
-                        if hh is None:
-                            hh = H
-                        new_stop = max(pos["stop_price"], hh - 2.0 * (pos.get("atr") or risk_price))
+                            atr_val = risk_price
+                    if not np.isfinite(atr_val) or atr_val <= 0:
+                        atr_val = risk_price
+                    if arch in ("F3_BREAKOUT", "T10_SOROS"):
+                        new_stop = max(pos["entry_price"] + 1.20 * risk_price,
+                                      highest_high - 2.0 * atr_val)
                     else:
                         new_stop = pos["entry_price"] + 1.20 * risk_price
                     if new_stop > pos["stop_price"]:
@@ -855,9 +863,21 @@ def step_a_update_positions(ledger, data):
                         pos["stop_price"] = new_stop
                 if unreal_r >= 2.2:
                     arch = pos.get("arch", "")
+                    sub = bars.iloc[:bar_idx + 1]
+                    highest_high = max(float(r["High"]) for _, r in sub.iterrows())
+                    lowest_low = min(float(r["Low"]) for _, r in sub.iterrows())
+                    try:
+                        atr_val = float(bar.get("atr", risk_price)) if hasattr(bar, "get") else float(bar["atr"])
+                    except Exception:
+                        try:
+                            atr_val = float(bar["atr"])
+                        except Exception:
+                            atr_val = risk_price
+                    if not np.isfinite(atr_val) or atr_val <= 0:
+                        atr_val = risk_price
                     if arch in ("F3_BREAKOUT", "T10_SOROS"):
-                        ll = L
-                        new_stop = min(pos["stop_price"], ll + 2.0 * risk_price)
+                        new_stop = min(pos["entry_price"] - 1.20 * risk_price,
+                                      lowest_low + 2.0 * atr_val)
                     else:
                         new_stop = pos["entry_price"] - 1.20 * risk_price
                     if new_stop < pos["stop_price"]:
@@ -1154,30 +1174,33 @@ def main():
             # queue as pending instead
             pass
         market_positions = open_positions  # global
-        filled, entry_time, entry_price = try_fill(sig, df)
+        filled, entry_time, entry_price = try_fill(sig, df, sig["tf"])
         if filled and not is_rejected(sig["order_id"], entry_time) and len(open_positions) < MAX_OPEN_POSITIONS and not ledger["block_stats"].get("blocked"):
-            risk_price = abs(entry_price - sig["stop_price"])
-            if risk_price > 0:
-                equity = ledger["account"]["equity"]
-                pos = {
-                    "order_id": sig["order_id"],
-                    "symbol": sig["symbol"],
-                    "market": sig["market"],
-                    "tf": sig["tf"],
-                    "arch": sig["arch"],
-                    "direction": sig["direction"],
-                    "entry_time": entry_time,
-                    "entry_price": float(entry_price),
-                    "stop_price": float(sig["stop_price"]),
-                    "initial_stop": float(sig["stop_price"]),
-                    "target_price": float(sig["target_price"]),
-                    "risk_capital": equity * ledger["account"]["risk_pct"],
-                    "unrealized_r": 0.0,
-                    "seal_sha256": sig["seal_sha256"],
-                }
-                open_positions.append(pos)
-                existing_ids.add(sig["order_id"])
-                continue
+            if in_cooldown(ledger, sig["symbol"], sig["direction"], entry_time, sig["tf"]):
+                filled = False
+            else:
+                risk_price = abs(entry_price - sig["stop_price"])
+                if risk_price > 0:
+                    equity = ledger["account"]["equity"]
+                    pos = {
+                        "order_id": sig["order_id"],
+                        "symbol": sig["symbol"],
+                        "market": sig["market"],
+                        "tf": sig["tf"],
+                        "arch": sig["arch"],
+                        "direction": sig["direction"],
+                        "entry_time": entry_time,
+                        "entry_price": float(entry_price),
+                        "stop_price": float(sig["stop_price"]),
+                        "initial_stop": float(sig["stop_price"]),
+                        "target_price": float(sig["target_price"]),
+                        "risk_capital": equity * ledger["account"]["risk_pct"],
+                        "unrealized_r": 0.0,
+                        "seal_sha256": sig["seal_sha256"],
+                    }
+                    open_positions.append(pos)
+                    existing_ids.add(sig["order_id"])
+                    continue
         # else pending
         ledger["pending_orders"].append(sig)
         existing_ids.add(sig["order_id"])
