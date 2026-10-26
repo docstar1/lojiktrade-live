@@ -65,7 +65,7 @@ canvas{width:100%;height:220px;background:var(--card);border:1px solid var(--bor
     <div class="card"><h3>Pending Orders</h3><div class="val" id="pendCount">0</div><div class="sub">Resting limits</div></div>
     <div class="card"><h3>Closed Trades</h3><div class="val" id="closedCount">0</div><div class="sub">Realized</div></div>
     <div class="card"><h3>4-Bet Block</h3><div class="val" id="blockState">OK</div><div class="sub" id="blockSub">Consecutive losses: 0</div></div>
-    <div class="card"><h3>Risk %</h3><div class="val" id="riskPct">5.0%</div><div class="sub">Per trade</div></div>
+    <div class="card"><h3>Risk %</h3><div class="val" id="riskPct">2.0%</div><div class="sub">Per trade</div></div>
   </div>
 
   <div class="section">
@@ -196,8 +196,8 @@ async function tick(){
       const unreal = pos.direction==='long' ? (p-pos.entry_price)/risk : (pos.entry_price-p)/risk;
       // ratchet
       if (unreal>=1.2){
-        if (pos.direction==='long'){ const ns=pos.entry_price+0.25*risk; if(ns>pos.stop_price) pos.stop_price=ns; }
-        else { const ns=pos.entry_price-0.25*risk; if(ns<pos.stop_price) pos.stop_price=ns; }
+        if (pos.direction==='long'){ const ns=pos.entry_price+0.30*risk; if(ns>pos.stop_price) pos.stop_price=ns; }
+        else { const ns=pos.entry_price-0.30*risk; if(ns<pos.stop_price) pos.stop_price=ns; }
       }
       let exit=null, reason=null;
       if (pos.direction==='long'){
@@ -216,7 +216,7 @@ async function tick(){
         ledger.account.equity += pnlNet * pos.risk_capital;
         const bs = ledger.block_stats;
         if (pnlNet>0){ bs.consecutive_losses=0; bs.blocked=false; }
-        else { bs.consecutive_losses=(bs.consecutive_losses||0)+1; if(bs.consecutive_losses>=4) bs.blocked=true; }
+        else { bs.consecutive_losses=(bs.consecutive_losses||0)+1; if(bs.consecutive_losses>=3) bs.blocked=true; }
         ledger.closed_trades.push({
           order_id: pos.order_id, symbol: pos.symbol, market: pos.market, tf: pos.tf, arch: pos.arch,
           direction: pos.direction, entry_time: pos.entry_time, exit_time: now,
@@ -233,8 +233,7 @@ async function tick(){
       const o = pending[i];
       const p = prices[o.symbol];
       if (p==null) continue;
-      const marketOpen = open.filter(x=>x.market===o.market).length;
-      if (marketOpen>=1) continue;
+      if (open.length >= 1) continue;
       if (ledger.block_stats.blocked) continue;
       const fill = o.direction==='long' ? (p <= o.limit_price) : (p >= o.limit_price);
       if (!fill) continue;
