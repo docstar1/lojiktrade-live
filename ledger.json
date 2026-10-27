@@ -20,7 +20,7 @@
       "initial_stop": 99.90376249468865,
       "target_price": 107.19375719770905,
       "risk_capital": 2.0,
-      "unrealized_r": -0.39738551353654605,
+      "unrealized_r": -0.4529388488963124,
       "seal_sha256": "825ed543dcae9ef18be37cf77fbfa85bb7f3aa5a32b4328ccf02485ef3d0fb30"
     }
   ],
@@ -88,6 +88,38 @@
       "delta": 0.046629692731898084,
       "rr": 3.5,
       "seal_sha256": "10f3a9e27c9c2606726e87e4823f202f3e583f0735d88de0b50fcaae9b49441e"
+    },
+    {
+      "order_id": "PNB.NS|1h|MA7_TRUE|long|2026-10-27 15:15:00+05:30",
+      "symbol": "PNB.NS",
+      "market": "IndiaNSE",
+      "tf": "1h",
+      "arch": "MA7_TRUE",
+      "direction": "long",
+      "placed_bar_time": "2026-10-27 15:15:00+05:30",
+      "limit_price": 120.45131687969433,
+      "stop_price": 118.72460353566531,
+      "target_price": 126.49481358379592,
+      "score": 2.8,
+      "delta": 0.014335362939648454,
+      "rr": 3.5,
+      "seal_sha256": "6e813cc1a2ba6ef68d14ec108a15cb455d978f7f83247a0a44edea61d588f63b"
+    },
+    {
+      "order_id": "LTC-USD|1h|MA7_TRUE|short|2026-10-27 11:00:00+00:00",
+      "symbol": "LTC-USD",
+      "market": "Crypto",
+      "tf": "1h",
+      "arch": "MA7_TRUE",
+      "direction": "short",
+      "placed_bar_time": "2026-10-27 11:00:00+00:00",
+      "limit_price": 56.45024221361932,
+      "stop_price": 57.16458454891159,
+      "target_price": 53.950044040096365,
+      "score": 2.8,
+      "delta": 0.012654371483279987,
+      "rr": 3.5,
+      "seal_sha256": "6345c21a2c2da1141e4d8ba3ca9a7abb0424b489f9c6b324204331c36448f4d8"
     }
   ],
   "closed_trades": [],
@@ -99,5 +131,5 @@
     "min_rr_current": 3.2,
     "monthly_dd_pct": 0.0
   },
-  "last_run": "2026-10-27T05:51:12.830604+00:00"
+  "last_run": "2026-10-27T11:22:30.122215+00:00"
 }
