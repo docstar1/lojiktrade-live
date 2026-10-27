@@ -20,7 +20,7 @@
       "initial_stop": 99.90376249468865,
       "target_price": 107.19375719770905,
       "risk_capital": 2.0,
-      "unrealized_r": -0.19985469419145616,
+      "unrealized_r": -0.39738551353654605,
       "seal_sha256": "825ed543dcae9ef18be37cf77fbfa85bb7f3aa5a32b4328ccf02485ef3d0fb30"
     }
   ],
@@ -42,6 +42,22 @@
       "seal_sha256": "eec951bd0253d9a4f3ebaa9b91c50b205be010dc0c8745481217c0d2aa726551"
     },
     {
+      "order_id": "SI=F|1d|F3_BREAKOUT|short|2026-10-27 00:00:00",
+      "symbol": "SI=F",
+      "market": "FXCommod",
+      "tf": "1d",
+      "arch": "F3_BREAKOUT",
+      "direction": "short",
+      "placed_bar_time": "2026-10-27 00:00:00",
+      "limit_price": 54.63634285047797,
+      "stop_price": 59.28232075827462,
+      "target_price": 36.981626800850705,
+      "score": 3.15,
+      "delta": 0.08503456976450986,
+      "rr": 3.8,
+      "seal_sha256": "492556c69a099f89b529d56f096503f876030585e5b89af416f42140804d965b"
+    },
+    {
       "order_id": "PLTR|1d|MA7_TRUE|long|2026-10-23 00:00:00",
       "symbol": "PLTR",
       "market": "US",
@@ -56,6 +72,22 @@
       "delta": 0.08458790556723411,
       "rr": 3.5,
       "seal_sha256": "f5cbae2448e5fd335c3b34766c58045cffb8269819430f497fcc30bfbb73bb42"
+    },
+    {
+      "order_id": "HAL.NS|1d|MA7_TRUE|long|2026-10-27 00:00:00",
+      "symbol": "HAL.NS",
+      "market": "IndiaNSE",
+      "tf": "1d",
+      "arch": "MA7_TRUE",
+      "direction": "long",
+      "placed_bar_time": "2026-10-27 00:00:00",
+      "limit_price": 4809.810537112385,
+      "stop_price": 4585.5305496681885,
+      "target_price": 5594.790493167071,
+      "score": 2.8,
+      "delta": 0.046629692731898084,
+      "rr": 3.5,
+      "seal_sha256": "10f3a9e27c9c2606726e87e4823f202f3e583f0735d88de0b50fcaae9b49441e"
     }
   ],
   "closed_trades": [],
@@ -67,5 +99,5 @@
     "min_rr_current": 3.2,
     "monthly_dd_pct": 0.0
   },
-  "last_run": "2026-10-27T00:52:11.516464+00:00"
+  "last_run": "2026-10-27T05:51:12.830604+00:00"
 }
