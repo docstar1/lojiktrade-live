@@ -6,7 +6,24 @@
     "month_start_equity": 100.0,
     "current_month": "2026-10"
   },
-  "open_positions": [],
+  "open_positions": [
+    {
+      "order_id": "CL=F|1h|MA7_TRUE|long|2026-10-26 16:00:00-04:00",
+      "symbol": "CL=F",
+      "market": "FXCommod",
+      "tf": "1h",
+      "arch": "MA7_TRUE",
+      "direction": "long",
+      "entry_time": "2026-10-26 18:00:00-04:00",
+      "entry_price": 101.52376131758207,
+      "stop_price": 99.90376249468865,
+      "initial_stop": 99.90376249468865,
+      "target_price": 107.19375719770905,
+      "risk_capital": 2.0,
+      "unrealized_r": -0.19985469419145616,
+      "seal_sha256": "825ed543dcae9ef18be37cf77fbfa85bb7f3aa5a32b4328ccf02485ef3d0fb30"
+    }
+  ],
   "pending_orders": [
     {
       "order_id": "INFY.NS|1d|P3_SWEEP|short|2026-10-23 00:00:00",
@@ -25,20 +42,20 @@
       "seal_sha256": "eec951bd0253d9a4f3ebaa9b91c50b205be010dc0c8745481217c0d2aa726551"
     },
     {
-      "order_id": "CL=F|1h|MA7_TRUE|long|2026-10-26 16:00:00-04:00",
-      "symbol": "CL=F",
-      "market": "FXCommod",
-      "tf": "1h",
+      "order_id": "PLTR|1d|MA7_TRUE|long|2026-10-23 00:00:00",
+      "symbol": "PLTR",
+      "market": "US",
+      "tf": "1d",
       "arch": "MA7_TRUE",
       "direction": "long",
-      "placed_bar_time": "2026-10-26 16:00:00-04:00",
-      "limit_price": 101.52376131758207,
-      "stop_price": 99.90376249468865,
-      "target_price": 107.19375719770905,
+      "placed_bar_time": "2026-10-23 00:00:00",
+      "limit_price": 190.76132292006332,
+      "stop_price": 174.62522215102035,
+      "target_price": 247.2376756117137,
       "score": 2.8,
-      "delta": 0.01595684401236686,
+      "delta": 0.08458790556723411,
       "rr": 3.5,
-      "seal_sha256": "825ed543dcae9ef18be37cf77fbfa85bb7f3aa5a32b4328ccf02485ef3d0fb30"
+      "seal_sha256": "f5cbae2448e5fd335c3b34766c58045cffb8269819430f497fcc30bfbb73bb42"
     }
   ],
   "closed_trades": [],
@@ -50,5 +67,5 @@
     "min_rr_current": 3.2,
     "monthly_dd_pct": 0.0
   },
-  "last_run": "2026-10-26T21:44:33.139311+00:00"
+  "last_run": "2026-10-27T00:52:11.516464+00:00"
 }
