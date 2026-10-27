@@ -16,6 +16,7 @@ import concurrent.futures
 import numpy as np
 import pandas as pd
 import yfinance as yf
+from typing import Dict, Any, Tuple, Optional
 
 ROOT = pathlib.Path(__file__).resolve().parent
 LEDGER_PATH = ROOT / "ledger.json"
@@ -164,7 +165,7 @@ def time_col():
     return "Time"
 
 
-def build_signal(symbol, market, tf, arch, direction, placed_bar_time, limit, stop, target, score):
+def build_signal(symbol, market, tf, arch, direction, placed_bar_time, limit, stop, target, score, kreil_info=None, kreil=None):
     try:
         limit = float(limit); stop = float(stop); target = float(target)
     except (TypeError, ValueError):
@@ -184,7 +185,8 @@ def build_signal(symbol, market, tf, arch, direction, placed_bar_time, limit, st
     seal = hashlib.sha256(
         f"{symbol}|{tf}|{arch}|{direction}|{placed_bar_time}|{limit:.6f}|{stop:.6f}|{target:.6f}".encode()
     ).hexdigest()
-    return {
+    _kreil = kreil if kreil is not None else kreil_info
+    out = {
         "order_id": oid,
         "symbol": symbol,
         "market": market,
@@ -200,6 +202,101 @@ def build_signal(symbol, market, tf, arch, direction, placed_bar_time, limit, st
         "rr": round(float(rr), 4),
         "seal_sha256": seal,
     }
+    if _kreil is not None:
+        out["kreil"] = _kreil
+    return out
+
+
+def compute_kreil_metrics(df: pd.DataFrame) -> Dict[str, Any]:
+    tr_raw = (df["High"] - df["Low"]).abs()
+    kr_atr = ((tr_raw + tr_raw.shift(1)) / 2.0) / df["Open"].replace(0, np.nan)
+    # fallback on row 0
+    if len(df) > 0:
+        try:
+            denom = df["Close"].iloc[0]
+            if denom == 0 or (isinstance(denom, float) and not np.isfinite(denom)):
+                denom = np.nan
+            kr_atr.iloc[0] = tr_raw.iloc[0] / denom
+        except Exception:
+            try:
+                kr_atr.iloc[0] = tr_raw.iloc[0] / df["Close"].iloc[0]
+            except Exception:
+                pass
+    kr_atr = kr_atr.replace([np.inf, -np.inf], np.nan)
+    atr_1d = float(kr_atr.iloc[-1])
+    atr_5 = float(kr_atr.iloc[-5:].mean())
+    atr_20 = float(kr_atr.iloc[-20:].mean())
+    atr_60 = float(kr_atr.iloc[-60:].mean())
+    atr_250 = float(kr_atr.iloc[-min(250, len(kr_atr)):].mean())
+    atr_5_250 = atr_5 / max(atr_250, 1e-9)
+    atr_1_20 = atr_1d / max(atr_20, 1e-9)
+    r_oc = ((df["Close"] - df["Open"]) / df["Open"].replace(0, np.nan)).dropna()
+    r_oc = r_oc.iloc[-min(250, len(df)):]
+    vals = r_oc.astype(float).to_numpy()
+    if len(vals) == 0:
+        mean = 0.0; std = 0.0; skew = 0.0; excess_kurt = 0.0
+    else:
+        mean = float(np.mean(vals))
+        std = float(np.std(vals, ddof=0))
+        if std <= 1e-12:
+            skew = 0.0
+            excess_kurt = 0.0
+        else:
+            z = (vals - mean) / std
+            skew = float(np.mean(z ** 3))
+            excess_kurt = float(np.mean(z ** 4) - 3.0)
+    return {
+        "atr_1d": atr_1d,
+        "atr_5": atr_5,
+        "atr_20": atr_20,
+        "atr_60": atr_60,
+        "atr_250": atr_250,
+        "atr_5_250": atr_5_250,
+        "atr_1_20": atr_1_20,
+        "mean": mean,
+        "std": std,
+        "skew": skew,
+        "excess_kurt": excess_kurt,
+    }
+
+
+def passes_kreil_regime_gate(df: pd.DataFrame, direction: str, arch: str = "") -> Tuple[bool, Dict[str, Any]]:
+    if df is None or len(df) < 30:
+        m = compute_kreil_metrics(df) if df is not None else {}
+        return False, {**m, "passed": False, "reason": "insufficient_bars", "score_boost": 0.0, "direction": str(direction or "").upper(), "arch": str(arch or "")}
+    m = compute_kreil_metrics(df)
+    d = str(direction).upper()
+    if d in ("L", "LONG"):
+        d = "LONG"
+    elif d in ("S", "SHORT"):
+        d = "SHORT"
+    elif d.startswith("L"):
+        d = "LONG"
+    elif d.startswith("S"):
+        d = "SHORT"
+    if not all(np.isfinite(m.get(k, np.nan)) for k in ("atr_5_250", "atr_1_20", "skew", "excess_kurt")):
+        return False, {**m, "passed": False, "reason": "nan_metric", "score_boost": 0.0, "direction": d, "arch": str(arch or "")}
+    passed = True
+    reason = None
+    if not (0.60 <= m["atr_5_250"] <= 1.60):
+        passed = False
+        reason = "atr_5_250_out_of_range"
+    elif m["atr_1_20"] < 0.85:
+        passed = False
+        reason = "atr_1_20_below_0.85"
+    elif m["excess_kurt"] < -0.5:
+        passed = False
+        reason = "low_kurtosis"
+    elif d == "LONG" and m["skew"] < -0.75:
+        passed = False
+        reason = "adverse_long_skew"
+    elif d == "SHORT" and m["skew"] > 0.75:
+        passed = False
+        reason = "adverse_short_skew"
+    score_boost = 0.0
+    if passed and ((d == "LONG" and m["skew"] > 0.5 and m["excess_kurt"] > 2.0) or (d == "SHORT" and m["skew"] < -0.5 and m["excess_kurt"] > 2.0)):
+        score_boost = 0.15
+    return passed, {**m, "passed": passed, "reason": reason, "score_boost": score_boost, "direction": d, "arch": arch}
 
 
 def _row(df, i):
@@ -576,6 +673,18 @@ def run_detectors(sym, df, tf, market=None, keep_all=False):
         except Exception:
             pass
 
+    # attach kreil metadata
+    for s in out:
+        try:
+            if "kreil" not in s:
+                _, kr_info = passes_kreil_regime_gate(df, s.get("direction", ""), s.get("arch", ""))
+                s["kreil"] = kr_info
+                s["base_score"] = round(float(s["score"]), 4)
+                if kr_info.get("score_boost", 0.0) > 0:
+                    s["score"] = round(min(4.0, float(s["score"]) + float(kr_info["score_boost"])), 4)
+                    kr_info["boost_applied"] = True
+        except Exception:
+            pass
     # keep single highest-score signal per (sym, tf)
     if not out:
         return []
@@ -735,6 +844,9 @@ def record_cooldown(ledger, symbol, direction, tf, exit_time_str):
     delta = pd.Timedelta(hours=_cooldown_hours(tf))
     until = exit_ts + delta
     ct_list = ledger.setdefault("block_stats", {}).setdefault("cooldowns", [])
+    if not isinstance(ct_list, list):
+        ct_list = []
+        ledger["block_stats"]["cooldowns"] = ct_list
     ct_list.append({"symbol": symbol, "direction": direction, "tf": tf, "until": str(until)})
     # keep bounded
     if len(ct_list) > 500:
@@ -817,6 +929,7 @@ def step_a_update_positions(ledger, data):
         exit_price = None
         reason = None
         cost_pct, slip_pct = get_costs(pos["market"])
+        pos.setdefault("initial_stop", pos["stop_price"])
         risk_price = (pos["entry_price"] - pos["initial_stop"]) if pos["direction"] == "long" else (pos["initial_stop"] - pos["entry_price"])
         if risk_price <= 0:
             continue
@@ -824,68 +937,71 @@ def step_a_update_positions(ledger, data):
             H = float(bar["High"]); L = float(bar["Low"]); C = float(bar["Close"])
             bar_time = str(bar["Time"])
             if pos["direction"] == "long":
-                unreal_r = (C - pos["entry_price"]) / risk_price
-                # ratchet
-                if unreal_r >= 1.2:
-                    new_stop = pos["entry_price"] + 0.30 * risk_price
-                    if new_stop > pos["stop_price"]:
-                        pos["stop_price"] = new_stop
-                if unreal_r >= 2.2:
-                    arch = pos.get("arch", "")
-                    sub = bars.iloc[:bar_idx + 1]
-                    highest_high = max(float(r["High"]) for _, r in sub.iterrows())
-                    lowest_low = min(float(r["Low"]) for _, r in sub.iterrows())
-                    try:
-                        atr_val = float(bar.get("atr", risk_price)) if hasattr(bar, "get") else float(bar["atr"])
-                    except Exception:
-                        try:
-                            atr_val = float(bar["atr"])
-                        except Exception:
-                            atr_val = risk_price
-                    if not np.isfinite(atr_val) or atr_val <= 0:
-                        atr_val = risk_price
-                    if arch in ("F3_BREAKOUT", "T10_SOROS"):
-                        new_stop = max(pos["entry_price"] + 1.20 * risk_price,
-                                      highest_high - 2.0 * atr_val)
-                    else:
-                        new_stop = pos["entry_price"] + 1.20 * risk_price
-                    if new_stop > pos["stop_price"]:
-                        pos["stop_price"] = new_stop
+                # Exit checks against this bar's range BEFORE any ratchet from Close
                 if L <= pos["stop_price"]:
                     exit_price = pos["stop_price"]; reason = "stop"; exited = True
                 elif H >= pos["target_price"]:
                     exit_price = pos["target_price"]; reason = "target"; exited = True
-            else:
-                unreal_r = (pos["entry_price"] - C) / risk_price
-                if unreal_r >= 1.2:
-                    new_stop = pos["entry_price"] - 0.30 * risk_price
-                    if new_stop < pos["stop_price"]:
-                        pos["stop_price"] = new_stop
-                if unreal_r >= 2.2:
-                    arch = pos.get("arch", "")
-                    sub = bars.iloc[:bar_idx + 1]
-                    highest_high = max(float(r["High"]) for _, r in sub.iterrows())
-                    lowest_low = min(float(r["Low"]) for _, r in sub.iterrows())
-                    try:
-                        atr_val = float(bar.get("atr", risk_price)) if hasattr(bar, "get") else float(bar["atr"])
-                    except Exception:
+                else:
+                    unreal_r = (C - pos["entry_price"]) / risk_price
+                    # ratchet (applies to subsequent bars only)
+                    if unreal_r >= 1.2:
+                        new_stop = pos["entry_price"] + 0.30 * risk_price
+                        if new_stop > pos["stop_price"]:
+                            pos["stop_price"] = new_stop
+                    if unreal_r >= 2.2:
+                        arch = pos.get("arch", "")
+                        sub = bars.iloc[:bar_idx + 1]
+                        highest_high = max(float(r["High"]) for _, r in sub.iterrows())
+                        lowest_low = min(float(r["Low"]) for _, r in sub.iterrows())
                         try:
-                            atr_val = float(bar["atr"])
+                            atr_val = float(bar.get("atr", risk_price)) if hasattr(bar, "get") else float(bar["atr"])
                         except Exception:
+                            try:
+                                atr_val = float(bar["atr"])
+                            except Exception:
+                                atr_val = risk_price
+                        if not np.isfinite(atr_val) or atr_val <= 0:
                             atr_val = risk_price
-                    if not np.isfinite(atr_val) or atr_val <= 0:
-                        atr_val = risk_price
-                    if arch in ("F3_BREAKOUT", "T10_SOROS"):
-                        new_stop = min(pos["entry_price"] - 1.20 * risk_price,
-                                      lowest_low + 2.0 * atr_val)
-                    else:
-                        new_stop = pos["entry_price"] - 1.20 * risk_price
-                    if new_stop < pos["stop_price"]:
-                        pos["stop_price"] = new_stop
+                        if arch in ("F3_BREAKOUT", "T10_SOROS"):
+                            new_stop = max(pos["entry_price"] + 1.20 * risk_price,
+                                          highest_high - 2.0 * atr_val)
+                        else:
+                            new_stop = pos["entry_price"] + 1.20 * risk_price
+                        if new_stop > pos["stop_price"]:
+                            pos["stop_price"] = new_stop
+            else:
                 if H >= pos["stop_price"]:
                     exit_price = pos["stop_price"]; reason = "stop"; exited = True
                 elif L <= pos["target_price"]:
                     exit_price = pos["target_price"]; reason = "target"; exited = True
+                else:
+                    unreal_r = (pos["entry_price"] - C) / risk_price
+                    if unreal_r >= 1.2:
+                        new_stop = pos["entry_price"] - 0.30 * risk_price
+                        if new_stop < pos["stop_price"]:
+                            pos["stop_price"] = new_stop
+                    if unreal_r >= 2.2:
+                        arch = pos.get("arch", "")
+                        sub = bars.iloc[:bar_idx + 1]
+                        highest_high = max(float(r["High"]) for _, r in sub.iterrows())
+                        lowest_low = min(float(r["Low"]) for _, r in sub.iterrows())
+                        try:
+                            atr_val = float(bar.get("atr", risk_price)) if hasattr(bar, "get") else float(bar["atr"])
+                        except Exception:
+                            try:
+                                atr_val = float(bar["atr"])
+                            except Exception:
+                                atr_val = risk_price
+                        if not np.isfinite(atr_val) or atr_val <= 0:
+                            atr_val = risk_price
+                        if arch in ("F3_BREAKOUT", "T10_SOROS"):
+                            new_stop = min(pos["entry_price"] - 1.20 * risk_price,
+                                          lowest_low + 2.0 * atr_val)
+                        else:
+                            new_stop = pos["entry_price"] - 1.20 * risk_price
+                        if new_stop < pos["stop_price"]:
+                            pos["stop_price"] = new_stop
 
             if exited:
                 break
@@ -963,7 +1079,7 @@ def step_a_update_positions(ledger, data):
                 pos["unrealized_r"] = (pos["entry_price"] - C) / risk_price
 
 
-def step_b_fill_pending(ledger, data, open_positions=None):
+def step_b_fill_pending(ledger, data, open_positions=None, enforce_kreil=False):
     if open_positions is None:
         open_positions = ledger["open_positions"]
     k = int(ledger.get("block_stats", {}).get("consecutive_losses", 0))
@@ -980,6 +1096,17 @@ def step_b_fill_pending(ledger, data, open_positions=None):
     # purge orders that no longer meet risk thresholds after a loss
     filtered_pending = []
     for order in ledger.get("pending_orders", []):
+        if enforce_kreil:
+            df = data.get((order.get("symbol"), order.get("tf")))
+            if df is not None:
+                passed_kr, kr_info = passes_kreil_regime_gate(df, order.get("direction", ""), order.get("arch", ""))
+                if not passed_kr:
+                    continue
+                if kr_info.get("score_boost", 0.0) > 0 and not order.get("kreil", {}).get("boost_applied"):
+                    order["base_score"] = round(float(order["score"]), 4)
+                    order["score"] = round(min(4.0, float(order["score"]) + float(kr_info["score_boost"])), 4)
+                    kr_info["boost_applied"] = True
+                order["kreil"] = kr_info
         if float(order.get("score", 0.0)) < s_min or float(order.get("rr", 0.0)) < min_rr:
             continue
         filtered_pending.append(order)
@@ -1117,7 +1244,7 @@ def main():
     update_block_stats(ledger)
 
     step_a_update_positions(ledger, data)
-    step_b_fill_pending(ledger, data, open_positions)
+    step_b_fill_pending(ledger, data, open_positions, enforce_kreil=True)
     step_a_update_positions(ledger, data)
 
     existing_ids = set()
@@ -1142,13 +1269,19 @@ def main():
                     continue
                 sigs = run_detectors(symbol, df, tf, market)
                 for sig in sigs:
-                    if sig["score"] < s_min:
-                        continue
-                    if float(sig.get("rr", 0.0)) < min_rr:
-                        continue
                     if blocked:
                         continue
                     if in_cooldown(ledger, sig["symbol"], sig["direction"], sig["placed_bar_time"], sig["tf"]):
+                        continue
+                    passed_kr, kreil_info = passes_kreil_regime_gate(df, sig["direction"], sig["arch"])
+                    if not passed_kr:
+                        continue
+                    if kreil_info.get("score_boost", 0.0) > 0 and not sig.get("kreil", {}).get("boost_applied"):
+                        sig["base_score"] = round(float(sig["score"]), 4)
+                        sig["score"] = round(min(4.0, float(sig["score"]) + float(kreil_info["score_boost"])), 4)
+                        kreil_info["boost_applied"] = True
+                    sig["kreil"] = kreil_info
+                    if sig["score"] < s_min or float(sig.get("rr", 0.0)) < min_rr:
                         continue
                     all_signals.append(sig)
 
@@ -1197,6 +1330,7 @@ def main():
                         "risk_capital": equity * ledger["account"]["risk_pct"],
                         "unrealized_r": 0.0,
                         "seal_sha256": sig["seal_sha256"],
+                        "kreil": sig.get("kreil"),
                     }
                     open_positions.append(pos)
                     existing_ids.add(sig["order_id"])
@@ -1214,6 +1348,10 @@ def main():
             bars = bars_after(df, order["placed_bar_time"])
             if len(bars) > 3:
                 continue
+            ok, kreil_info = passes_kreil_regime_gate(df, order.get("direction", ""), order.get("arch", ""))
+            if not ok:
+                continue
+            order["kreil"] = kreil_info
         new_pending.append(order)
     ledger["pending_orders"] = new_pending
     # dedup per symbol keep highest score
@@ -1243,6 +1381,52 @@ def main():
             else:
                 pos["unrealized_r"] = (pos["entry_price"] - C) / risk_price
     ledger["open_positions"] = open_positions
+
+    # spot prices
+    spot_prices = {}
+    for (sym, tf), df in data.items():
+        if df is None or (hasattr(df, "empty") and df.empty):
+            continue
+        try:
+            price = float(df.iloc[-1]["Close"])
+            ts = str(df.iloc[-1]["Time"]) if "Time" in df.columns else str(df.index[-1])
+        except Exception:
+            continue
+        if sym not in spot_prices:
+            spot_prices[sym] = {"price": price, "ts": ts, "tf": tf}
+        else:
+            cur_tf = spot_prices[sym].get("tf")
+            if (cur_tf == "1d" and tf in ("15m", "1h")) or (cur_tf == "1h" and tf == "15m"):
+                spot_prices[sym] = {"price": price, "ts": ts, "tf": tf}
+    ledger["spot_prices"] = spot_prices
+
+    # stamp last_price and kreil on open positions
+    for pos in ledger["open_positions"]:
+        df = data.get((pos.get("symbol"), pos.get("tf")))
+        if df is not None and not (hasattr(df, "empty") and df.empty):
+            try:
+                pos["last_price"] = float(df.iloc[-1]["Close"])
+            except Exception:
+                pass
+            if "kreil" not in pos:
+                try:
+                    pos["kreil"] = passes_kreil_regime_gate(df, pos.get("direction", ""), pos.get("arch", ""))[1]
+                except Exception:
+                    pass
+    # stamp pending orders
+    for p in ledger["pending_orders"]:
+        df = data.get((p.get("symbol"), p.get("tf")))
+        if df is not None and not (hasattr(df, "empty") and df.empty):
+            try:
+                p["last_price"] = float(df.iloc[-1]["Close"])
+            except Exception:
+                pass
+            if "kreil" not in p:
+                try:
+                    p["kreil"] = passes_kreil_regime_gate(df, p.get("direction", ""), p.get("arch", ""))[1]
+                except Exception:
+                    pass
+
     ledger["last_run"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
     update_block_stats(ledger)
 

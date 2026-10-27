@@ -1,4 +1,4 @@
-import sys, os, json, math
+﻿import sys, os, json, math
 from collections import Counter
 import numpy as np
 import pandas as pd
@@ -36,7 +36,7 @@ def make_base(n=80):
     lows = [99.0] * n
     opens = [100.0] * n
     volumes = [1000.0] * n
-    times = [f"t{i}" for i in range(n)]
+    times = [f"t{i:04d}" for i in range(n)]
     df = pd.DataFrame({
         "Time": times,
         "Open": opens,
@@ -46,6 +46,45 @@ def make_base(n=80):
         "Volume": volumes,
     })
     return sw.compute_indicators(df)
+
+
+def make_kreil_boost_df(up=True):
+    """250 bars with 10 fat-tail bars (5 up / 5 down) that trip the Kreil sweet-spot boost."""
+    n = 250
+    closes, highs, lows, opens = [], [], [], []
+    for i in range(n):
+        if 50 <= i <= 59:
+            if up:
+                c, h, l = 130.0, 131.0, 99.0
+            else:
+                c, h, l = 70.0, 101.0, 69.0
+        else:
+            c, h, l = 100.01, 101.0, 99.0
+        closes.append(c)
+        highs.append(h)
+        lows.append(l)
+        opens.append(100.0)
+    return make_df(closes, highs=highs, lows=lows, opens=opens,
+                   times=[f"t{i:04d}" for i in range(n)])
+
+
+def make_kreil_neutral_df():
+    """250 bars with symmetric fat tails: Kreil gate passes but no directional boost."""
+    n = 250
+    closes, highs, lows, opens = [], [], [], []
+    for i in range(n):
+        if 50 <= i <= 54:
+            c, h, l = 130.0, 131.0, 99.0
+        elif 55 <= i <= 59:
+            c, h, l = 70.0, 101.0, 69.0
+        else:
+            c, h, l = 100.0, 101.0, 99.0
+        closes.append(c)
+        highs.append(h)
+        lows.append(l)
+        opens.append(100.0)
+    return make_df(closes, highs=highs, lows=lows, opens=opens,
+                   times=[f"t{i:04d}" for i in range(n)])
 
 
 DEFAULTS = {
@@ -89,9 +128,17 @@ def test_1_no_e1():
             break
     assert src, "scanner source not found"
     assert '"E1"' not in src
-    closes = [100 + i * 0.5 for i in range(120)]
-    df = make_df(closes)
-    sigs = sw.run_detectors("AMD", df, "1h", "US")
+    # signal-producing setup (F3 breakout) so the arch assertions are not vacuous
+    n = 80
+    df = make_base(n)
+    for k in range(n - 6, n):
+        set_row(df, k, ema9=112.0, ema30=109.0, sma200=100.0, sma200_prev5=99.0,
+                Close=100.0, High=100.0, Low=100.0, rsi=50.0, atr=3.0,
+                z_v=0.5, h20=105.0, l10=97.0, l20=95.0, vol_ratio=0.9, er10=0.1, atr_ratio=0.5)
+    set_row(df, n - 1, Close=115.0, High=115.0, Low=108.0, ema9=112.0, ema30=109.0,
+            sma200=100.0, sma200_prev5=99.0, atr=3.0, z_v=2.2, rsi=60.0, h20=112.0, l10=109.0)
+    sigs = sw.run_detectors("AMD", df, "1d", "US", keep_all=True)
+    assert len(sigs) > 0
     assert all(s["arch"] in sw.ALLOWED_ARCHS for s in sigs)
     assert all(s["arch"] != "E1" for s in sigs)
     print("Test 1 PASS")
@@ -353,7 +400,8 @@ def test_9_cooldown():
 def test_10_pending_cap_schema():
     times = [f"2026-01-{i+1:02d} 00:00:00" for i in range(5)]
     closes = [100.0] * 5
-    lows = [90.0] * 5
+    # lows above the 99.0 limit => no fills, so the 8-order global cap is observable
+    lows = [100.0] * 5
     highs = [101.0] * 5
     df = make_df(closes, highs=highs, lows=lows, times=times)
     data = {}
@@ -372,7 +420,7 @@ def test_10_pending_cap_schema():
     L["pending_orders"] = orders
     sw.step_b_fill_pending(L, data, L["open_positions"])
     po = L["pending_orders"]
-    assert len(po) <= 8
+    assert len(po) == 8, len(po)
     c = Counter(o["symbol"] for o in po)
     assert all(v <= 1 for v in c.values())
 
@@ -392,17 +440,26 @@ def test_10_pending_cap_schema():
 # Test 11
 def test_11_no_retroactive_fill_and_min_rr():
     n = 80
-    closes = [100.0 + i * 0.1 for i in range(n)]
-    df = make_df(closes)
+    times = [f"2026-01-{i+1:02d} 00:00:00" for i in range(n)]
+    df = make_df([100.0] * n, times=times)
+    for k in range(n - 6, n):
+        set_row(df, k, ema9=112.0, ema30=108.0, sma200=100.0, sma200_prev5=99.0,
+                Low=114.0, Close=115.0, High=115.0, rsi=52.0, atr=3.0,
+                z_v=0.5, h20=116.0, l20=95.0, er10=0.1, atr_ratio=0.5)
+    set_row(df, n - 3, High=116.0, ema30=108.0, atr=3.0, z_v=0.5)
+    set_row(df, n - 2, ema9=112.0, ema30=108.0, sma200=100.0, sma200_prev5=99.0,
+            Low=114.0, Close=115.0, High=115.0, rsi=52.0, atr=3.0, z_v=0.5)
+    set_row(df, n - 1, ema9=110.0, ema30=108.0, sma200=100.0, sma200_prev5=99.0,
+            Low=108.2, Close=109.0, High=109.5, rsi=52.0, atr=3.0, z_v=0.5)
     sigs = sw.run_detectors("HAL.NS", df, "1d", "IndiaNSE", keep_all=True)
-    # if any signal, placed on latest bar
+    assert sigs, "expected at least one signal"
+    # placed on the latest bar only
     for s in sigs:
         assert s["placed_bar_time"] == str(df.iloc[-1]["Time"]), (s["placed_bar_time"], str(df.iloc[-1]["Time"]))
     # try_fill on same bar should not fill
-    if sigs:
-        sig = sigs[0]
-        filled, et, ep = sw.try_fill(sig, df, "1d")
-        assert filled is False and et is None and ep is None, (filled, et, ep)
+    sig = sigs[0]
+    filled, et, ep = sw.try_fill(sig, df, "1d")
+    assert filled is False and et is None and ep is None, (filled, et, ep)
     # update_block_stats populates min_rr_current
     L = _base_ledger()
     sw.update_block_stats(L)
@@ -453,6 +510,254 @@ def test_12_chandelier_ratchet():
     print("Test 12 PASS")
 
 
+# Test 13
+def test_13_kreil_metrics_and_sweet_spot():
+    n = 120
+    closes = [100.0 + (i % 7) * 0.5 for i in range(n)]
+    highs = [c + 1.5 for c in closes]
+    lows = [c - 1.5 for c in closes]
+    opens = [c - 0.2 for c in closes]
+    df = make_df(closes, highs=highs, lows=lows, opens=opens)
+    m = sw.compute_kreil_metrics(df)
+    for k in ("atr_1d", "atr_5", "atr_20", "atr_60", "atr_250", "atr_5_250",
+              "atr_1_20", "mean", "std", "skew", "excess_kurt"):
+        assert k in m, k
+    assert np.isfinite(m["atr_5_250"])
+    passed, info = sw.passes_kreil_regime_gate(make_kreil_neutral_df(), "LONG")
+    assert passed is True and info["reason"] is None
+    assert info["score_boost"] in (0.0, 0.15)
+    print("Test 13 PASS")
+
+
+# Test 14
+def test_14_kreil_rejects_dead_and_exhausted_atr():
+    n = 60
+    closes = [100.0] * n
+    df_dead = make_df(closes, highs=closes, lows=closes, opens=closes)
+    passed, info = sw.passes_kreil_regime_gate(df_dead, "LONG")
+    assert passed is False
+    assert info["reason"] is not None
+
+    closes2 = [100.0] * (n - 5) + [100.0 + i * 5.0 for i in range(5)]
+    highs2 = [c + 0.1 for c in closes2]
+    lows2 = [c - 0.1 for c in closes2]
+    for i in range(n - 5, n):
+        highs2[i] = closes2[i] + 20.0
+        lows2[i] = closes2[i] - 20.0
+    df_ex = make_df(closes2, highs=highs2, lows=lows2, opens=closes2)
+    passed2, info2 = sw.passes_kreil_regime_gate(df_ex, "LONG")
+    assert passed2 is False
+    assert info2["reason"] == "atr_5_250_out_of_range", info2["reason"]
+    assert info2["atr_5_250"] > 1.60, info2["atr_5_250"]
+    print("Test 14 PASS")
+
+
+# Test 15
+def test_15_kreil_directional_skew_and_boost():
+    n = 120
+    closes = [100.0 + (i % 10) for i in range(n)]
+    for i in range(0, n, 15):
+        closes[i] = closes[i] + 8.0
+    highs = [c + 1.0 for c in closes]
+    lows = [c - 1.0 for c in closes]
+    opens = [c - 0.5 for c in closes]
+    df = make_df(closes, highs=highs, lows=lows, opens=opens)
+    passed, info = sw.passes_kreil_regime_gate(df, "LONG")
+    assert passed is False
+    assert info["reason"] == "low_kurtosis", info["reason"]
+    assert info["skew"] < 0.0, info["skew"]
+    assert info["score_boost"] == 0.0
+
+    passed_s, info_s = sw.passes_kreil_regime_gate(df, "SHORT")
+    assert passed_s is False
+    assert info_s["reason"] == "low_kurtosis", info_s["reason"]
+    assert info_s["score_boost"] == 0.0
+
+    closes_n = [100.0 - (i % 10) for i in range(n)]
+    for i in range(0, n, 15):
+        closes_n[i] = closes_n[i] - 8.0
+    df_n = make_df(closes_n, highs=[c+1.0 for c in closes_n], lows=[c-1.0 for c in closes_n],
+                   opens=[c+0.5 for c in closes_n])
+    passed_n, info_n = sw.passes_kreil_regime_gate(df_n, "LONG")
+    assert passed_n is True
+    assert info_n["reason"] is None
+    assert info_n["skew"] < 0.0, info_n["skew"]
+    assert info_n["score_boost"] == 0.0
+
+    passed_ns, info_ns = sw.passes_kreil_regime_gate(df_n, "SHORT")
+    assert passed_ns is True
+    assert info_ns["reason"] is None
+    assert info_ns["excess_kurt"] < 2.0, info_ns["excess_kurt"]
+    assert info_ns["score_boost"] == 0.0
+
+    # directional skew vetoes the opposite side on fat-tailed data
+    passed_up, info_up = sw.passes_kreil_regime_gate(make_kreil_boost_df(True), "SHORT")
+    assert passed_up is False
+    assert info_up["reason"] == "adverse_short_skew", info_up["reason"]
+    passed_dn, info_dn = sw.passes_kreil_regime_gate(make_kreil_boost_df(False), "LONG")
+    assert passed_dn is False
+    assert info_dn["reason"] == "adverse_long_skew", info_dn["reason"]
+    print("Test 15 PASS")
+
+
+# Test 16
+def test_16_step_b_prunes_non_kreil_pending():
+    times = [f"2026-01-{i+1:02d} 00:00:00" for i in range(5)]
+    closes = [100.0] * 5
+    df = make_df(closes, highs=closes, lows=closes, opens=closes, times=times)
+    data = {("X", "1d"): df}
+    L = _base_ledger()
+    pending = [{"order_id": "X|1d|MA7_TRUE|long|t", "symbol": "X", "market": "US", "tf": "1d",
+                "arch": "MA7_TRUE", "direction": "long", "placed_bar_time": times[2],
+                "limit_price": 99.0, "stop_price": 95.0, "target_price": 113.0,
+                "score": 3.0, "seal_sha256": "abc", "rr": 3.5}]
+    L["pending_orders"] = pending
+    sw.step_b_fill_pending(L, data, L["open_positions"], enforce_kreil=True)
+    assert len(L["pending_orders"]) == 0, L["pending_orders"]
+    print("Test 16 PASS")
+
+
+# Test 17
+def test_17_spot_prices_and_seal_integrity():
+    sig = sw.build_signal("AMD", "US", "1h", "P3_SWEEP", "long", "t", 100.0, 95.0, 113.0, 3.0)
+    assert sig is not None
+    import hashlib
+    seal = hashlib.sha256(
+        f"AMD|1h|P3_SWEEP|long|t|{sig['limit_price']:.6f}|{sig['stop_price']:.6f}|{sig['target_price']:.6f}".encode()
+    ).hexdigest()
+    assert sig["seal_sha256"] == seal
+    sig2 = sw.build_signal("AMD", "US", "1h", "P3_SWEEP", "long", "t", 100.0, 95.0, 113.0, 3.0,
+                           kreil_info={"foo": "bar"})
+    assert sig2 is not None and sig2.get("kreil", {}).get("foo") == "bar"
+    assert sw.DASHBOARD_HTML is None
+    print("Test 17 PASS")
+
+
+# Test 18
+def test_18_kreil_score_boost_rescues_signal_above_s_min():
+    df_up = make_kreil_boost_df(True)
+    passed, info = sw.passes_kreil_regime_gate(df_up, "LONG")
+    assert passed is True
+    assert info["reason"] is None
+    assert info["skew"] > 0.5, info["skew"]
+    assert info["excess_kurt"] > 2.0, info["excess_kurt"]
+    assert info["score_boost"] == 0.15
+
+    df_dn = make_kreil_boost_df(False)
+    passed_dn, info_dn = sw.passes_kreil_regime_gate(df_dn, "SHORT")
+    assert passed_dn is True
+    assert info_dn["reason"] is None
+    assert info_dn["skew"] < -0.5, info_dn["skew"]
+    assert info_dn["excess_kurt"] > 2.0, info_dn["excess_kurt"]
+    assert info_dn["score_boost"] == 0.15
+
+    s_min = sw.get_s_min(0)
+    assert s_min == 2.6
+    base_score = 2.5
+    assert base_score < s_min
+    assert round(base_score + 0.15, 4) >= s_min
+
+    last_time = str(df_up.iloc[-1]["Time"])
+
+    def _order(sym):
+        return {
+            "order_id": f"{sym}|1d|MA7_TRUE|long|{last_time}",
+            "symbol": sym, "market": "US", "tf": "1d", "arch": "MA7_TRUE",
+            "direction": "long", "placed_bar_time": last_time,
+            "limit_price": 100.0, "stop_price": 96.0, "target_price": 116.0,
+            "score": base_score, "rr": 4.0, "seal_sha256": "abc",
+        }
+
+    # rescued: base score below s_min, Kreil boost lifts it over the threshold
+    L = _base_ledger()
+    L["pending_orders"] = [_order("BOOST")]
+    sw.step_b_fill_pending(L, {("BOOST", "1d"): df_up}, L["open_positions"], enforce_kreil=True)
+    assert len(L["pending_orders"]) == 1, L["pending_orders"]
+    o = L["pending_orders"][0]
+    assert o["base_score"] == base_score, o.get("base_score")
+    assert o["score"] == 2.65, o["score"]
+    assert o["score"] >= s_min
+    assert o["kreil"]["boost_applied"] is True
+    assert o["kreil"]["score_boost"] == 0.15
+    assert len(L["open_positions"]) == 0
+
+    # idempotent: a second pass must not stack the boost
+    sw.step_b_fill_pending(L, {("BOOST", "1d"): df_up}, L["open_positions"], enforce_kreil=True)
+    assert len(L["pending_orders"]) == 1, L["pending_orders"]
+    assert L["pending_orders"][0]["score"] == 2.65, L["pending_orders"][0]["score"]
+
+    # control: same sub-threshold score on gate-passing data without boost is pruned
+    L2 = _base_ledger()
+    L2["pending_orders"] = [_order("NEUTRAL")]
+    sw.step_b_fill_pending(L2, {("NEUTRAL", "1d"): make_kreil_neutral_df()},
+                           L2["open_positions"], enforce_kreil=True)
+    assert len(L2["pending_orders"]) == 0, L2["pending_orders"]
+    print("Test 18 PASS")
+
+
+# Test 19
+def test_19_nan_fail_closed_and_intrabar_order():
+    # fail-closed: insufficient bars (<30) and None input
+    short_df = make_df([100.0] * 29)
+    passed_s, info_s = sw.passes_kreil_regime_gate(short_df, "LONG")
+    assert passed_s is False
+    assert info_s["reason"] == "insufficient_bars", info_s["reason"]
+    assert info_s["score_boost"] == 0.0
+    passed_n, info_n = sw.passes_kreil_regime_gate(None, "LONG")
+    assert passed_n is False
+    assert info_n["reason"] == "insufficient_bars", info_n["reason"]
+
+    # fail-closed: NaN metrics => nan_metric
+    closes = [100.0] * 60
+    closes[-1] = float("nan")
+    nan_df = make_df(closes)
+    passed_nan, info_nan = sw.passes_kreil_regime_gate(nan_df, "LONG")
+    assert passed_nan is False
+    assert info_nan["reason"] == "nan_metric", info_nan["reason"]
+
+    # intrabar order: the bar's Low hits the OLD stop before the Close-based ratchet
+    times = [f"2026-02-{i+1:02d} 00:00:00" for i in range(4)]
+    closes_a = [100.0, 100.0, 130.0, 130.0]
+    highs_a = [100.0, 100.0, 130.0, 130.0]
+    lows_a = [100.0, 100.0, 96.0, 130.0]
+    df_a = make_df(closes_a, highs=highs_a, lows=lows_a, times=times)
+    pos_a = {
+        "order_id": "X|1d|MA7_TRUE|long|t", "symbol": "X", "market": "IndiaNSE", "tf": "1d",
+        "arch": "MA7_TRUE", "direction": "long", "entry_time": times[1],
+        "entry_price": 100.0, "stop_price": 97.0, "initial_stop": 97.0,
+        "target_price": 112.6, "risk_capital": 2.0, "unrealized_r": 0.0, "seal_sha256": "x",
+    }
+    L = _base_ledger()
+    L["open_positions"] = [pos_a]
+    sw.step_a_update_positions(L, {("X", "1d"): df_a})
+    assert len(L["open_positions"]) == 0, L["open_positions"]
+    assert len(L["closed_trades"]) == 1
+    tr = L["closed_trades"][0]
+    assert tr["reason"] == "stop", tr["reason"]
+    assert abs(tr["exit_price"] - 97.0) < 1e-9, tr["exit_price"]
+
+    # no exit => ratchet applies, and initial_stop is preserved (setdefault on legacy pos)
+    closes_b = [100.0, 100.0, 104.0, 104.0]
+    highs_b = [100.0, 100.0, 105.0, 105.0]
+    lows_b = [100.0, 100.0, 99.0, 101.0]
+    df_b = make_df(closes_b, highs=highs_b, lows=lows_b, times=times)
+    pos_b = {
+        "order_id": "Y|1d|MA7_TRUE|long|t", "symbol": "Y", "market": "IndiaNSE", "tf": "1d",
+        "arch": "MA7_TRUE", "direction": "long", "entry_time": times[1],
+        "entry_price": 100.0, "stop_price": 97.0,
+        "target_price": 112.6, "risk_capital": 2.0, "unrealized_r": 0.0, "seal_sha256": "x",
+    }
+    assert "initial_stop" not in pos_b
+    L2 = _base_ledger()
+    L2["open_positions"] = [pos_b]
+    sw.step_a_update_positions(L2, {("Y", "1d"): df_b})
+    assert len(L2["open_positions"]) == 1, L2["open_positions"]
+    held = L2["open_positions"][0]
+    assert abs(held["initial_stop"] - 97.0) < 1e-9, held["initial_stop"]
+    assert abs(held["stop_price"] - 100.9) < 1e-9, held["stop_price"]
+    print("Test 19 PASS")
+
+
 if __name__ == "__main__":
     test_1_no_e1()
     test_2_ma7_true()
@@ -466,4 +771,11 @@ if __name__ == "__main__":
     test_10_pending_cap_schema()
     test_11_no_retroactive_fill_and_min_rr()
     test_12_chandelier_ratchet()
-    print("ALL 12 TESTS PASSED")
+    test_13_kreil_metrics_and_sweet_spot()
+    test_14_kreil_rejects_dead_and_exhausted_atr()
+    test_15_kreil_directional_skew_and_boost()
+    test_16_step_b_prunes_non_kreil_pending()
+    test_17_spot_prices_and_seal_integrity()
+    test_18_kreil_score_boost_rescues_signal_above_s_min()
+    test_19_nan_fail_closed_and_intrabar_order()
+    print("ALL 19 TESTS PASSED")

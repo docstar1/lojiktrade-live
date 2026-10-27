@@ -37,6 +37,7 @@ canvas{width:100%;height:220px;background:var(--card);border:1px solid var(--bor
 .status-line{font-size:13px;color:var(--muted)}
 .good{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)}
 .mono{font-family:Consolas,monospace;font-size:11px}
+.kreil{display:inline-block;padding:2px 6px;border-radius:999px;font-size:10px;background:rgba(59,130,246,.15);color:#93c5fd;border:1px solid #3b82f6;margin-left:4px;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -106,7 +107,7 @@ canvas{width:100%;height:220px;background:var(--card);border:1px solid var(--bor
 
 <script>
 const LEDGER_LOCAL_URL = 'ledger.json?t=' + Date.now();
-const LEDGER_CLOUD_URL = 'https://raw.githubusercontent.com/docstar1/lojiktrade-live/main/ledger.json?t=' + Date.now();let ledger = null;
+const LEDGER_CLOUD_URL = 'https://raw.githubusercontent.com/docstar1/lojiktrade-live/main/ledger.json?t=' + Date.now();let ledger = null; let serverLastRun = null;
 let prices = {};
 let equitySeries = [];
 let lastTick = null;
@@ -132,7 +133,7 @@ async function fetchYahooPrice(sym){
   ];
   for (const p of proxies){
     try{
-      const r = await fetch(p, {signal: AbortSignal.timeout(9000)});
+      const r = await fetch(p, {signal: AbortSignal.timeout(3500)});
       if(!r.ok) continue;
       let data;
       if (p.includes('allorigins')){
@@ -149,11 +150,20 @@ async function fetchYahooPrice(sym){
       if (closes){ for(let i=closes.length-1;i>=0;i--) if (closes[i]!=null) return Number(closes[i]); }
     }catch(e){}
   }
-  return null;
+  // CORS proxies failed: fall back to authoritative server-fetched price
+  if (prices && prices[sym] != null) return Number(prices[sym]);
+  if (ledger && ledger.spot_prices && ledger.spot_prices[sym] != null){
+    const sp = ledger.spot_prices[sym];
+    const v = (sp && (sp.price != null ? sp.price : (sp.last_price || sp.current_price))) ;
+    if (v != null) return Number(v);
+  }
+  const sp = ledger && ledger.spot_prices && ledger.spot_prices[sym];
+  const fallback = prices[sym] ?? (sp == null ? null : typeof sp === 'object' ? Number(sp.price) : Number(sp));
+  return Number.isFinite(fallback) ? fallback : null;
 }
 
 async function fetchAllPrices(){
-  const out = {};
+  const out = (prices && typeof prices === 'object') ? Object.assign({}, prices) : {};
   let binanceMap = null;
   try{
     const r = await fetch('https://api.binance.com/api/v3/ticker/price', {signal: AbortSignal.timeout(9000)});
@@ -176,6 +186,97 @@ async function fetchAllPrices(){
   return out;
 }
 
+function seedPricesFromLedger(L, forceOverwrite = false){
+  if (!L) return;
+  if (!prices || typeof prices !== 'object') prices = {};
+  // spot_prices authoritative
+  if (L.spot_prices && typeof L.spot_prices === 'object'){
+    for (const sym in L.spot_prices){
+      if (forceOverwrite || prices[sym] == null){
+        const sp = L.spot_prices[sym];
+        let v = null;
+        if (sp != null){
+          if (typeof sp === 'object') v = (sp.price != null ? sp.price : (sp.last_price || sp.current_price || sp.entry));
+          else v = sp;
+        }
+        if (v != null && v !== '') prices[sym] = Number(v);
+      }
+    }
+  }
+  // open positions fallback
+  for (const p of (L.open_positions || [])){
+    if (!p || !p.symbol) continue;
+    if (forceOverwrite || prices[p.symbol] == null){
+      const v = p.last_price || p.current_price || p.entry || p.entry_price || p.last;
+      if (v != null && v !== '') prices[p.symbol] = Number(v);
+    }
+  }
+  // pending orders fallback
+  for (const o of (L.pending_orders || [])){
+    if (!o || !o.symbol) continue;
+    if (forceOverwrite || prices[o.symbol] == null){
+      const v = o.last_price || o.limit || o.limit_price || o.last;
+      if (v != null && v !== '') prices[o.symbol] = Number(v);
+    }
+  }
+}
+
+function kreilBadge(k){
+  if (!k) return '';
+  let src = k;
+  if (k.metrics && typeof k.metrics === 'object') src = Object.assign({}, k, k.metrics);
+  const atr = src.atr_ratio ?? src.atr5_250 ?? src.atr_5_250 ?? src.atr ?? src.ratio ?? src.atr5 ?? src['atr5/250'] ?? src.atrRatio ?? src.atr5over250;
+  const sk = src.skew ?? src.sk ?? src.skewness ?? src.Sk ?? src.skew_ ?? src.skewness_;
+  const failed = (src.passed === false || src.ok === false || src.regime === 'fail' || src.status === 'fail');
+  const ok = failed ? '✗' : '✓';
+  const style = failed
+    ? 'background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.35)'
+    : 'background:rgba(16,185,129,.15);color:#34d399;border:1px solid rgba(16,185,129,.35)';
+  let txt = 'KREIL ' + ok;
+  if (atr != null && !isNaN(Number(atr))) txt += ' ATR5/250: ' + Number(atr).toFixed(2);
+  if (sk != null && !isNaN(Number(sk))){
+    const n = Number(sk);
+    txt += ' | Sk: ' + (n >= 0 ? '+' : '') + n.toFixed(2);
+  }
+  if (src.reason) txt += ' (' + src.reason + ')';
+  if (src.boost_applied === true || Number(src.score_boost) > 0) txt += ' +0.15 boost';
+  return ' <span class="kreil" style="' + style + '">' + txt + '</span>';
+}
+
+async function refreshLedgerFromServer(){
+  try{
+    let r;
+    try { r = await fetch('ledger.json?t=' + Date.now()); if (!r || !r.ok) throw new Error((r && r.status) || 'local fail'); }
+    catch(e){ r = await fetch('https://raw.githubusercontent.com/docstar1/lojiktrade-live/main/ledger.json?t=' + Date.now()); if (!r || !r.ok) throw new Error((r && r.status) || 'cloud fail'); }
+    const fetched = await r.json();
+    if (!fetched || typeof fetched !== 'object') return;
+    // normalize
+    if (!fetched.account) fetched.account = {equity:100, risk_pct:0.02, target:1000};
+    if (!fetched.open_positions) fetched.open_positions = [];
+    if (!fetched.pending_orders) fetched.pending_orders = [];
+    if (!fetched.closed_trades) fetched.closed_trades = [];
+    if (!fetched.block_stats) fetched.block_stats = {consecutive_losses:0, blocked:false};
+    // decide update
+    let update = false;
+    if (!ledger) update = true;
+    else if (fetched.last_run && fetched.last_run !== serverLastRun) update = true;
+    else {
+      // spot_prices updated?
+      try{
+        if (JSON.stringify(fetched.spot_prices) !== JSON.stringify(ledger.spot_prices)) update = true;
+      }catch(e){}
+    }
+    if (update){
+      ledger = fetched;
+      if (fetched.last_run) serverLastRun = fetched.last_run;
+      normalizePositions();
+      seedPricesFromLedger(ledger, true);
+    }
+  }catch(e){
+    // silent; keep in-memory ledger
+  }
+}
+
 async function tick(){
   if (ticking) return;
   ticking = true;
@@ -183,14 +284,21 @@ async function tick(){
   badge.className='badge live'; badge.innerHTML='<span class="dot"></span>Live';
   document.getElementById('errLine').textContent='';
   try{
-    prices = await fetchAllPrices();
+    await refreshLedgerFromServer();
+    // seed marks from the ledger BEFORE fetching so every symbol has a baseline
+    seedPricesFromLedger(ledger, false);
+    const fetched = await fetchAllPrices();
+    prices = Object.assign({}, prices || {}, fetched || {});
+    // any symbol still missing a mark falls back to the ledger's spot_prices/entry
+    seedPricesFromLedger(ledger, false);
+    normalizePositions();
     const now = new Date().toISOString();
     const open = ledger.open_positions;
-    // close open positions
-    for (let i=open.length-1;i>=0;i--){
-      const pos = open[i];
+    // live mark-to-market: ratchet stops + unrealized_r only (authoritative fills/closes stay on server)
+    for (const pos of open){
       const p = prices[pos.symbol];
       if (p==null) continue;
+      pos.last_price = p;
       const risk = pos.direction==='long' ? (pos.entry_price-pos.initial_stop) : (pos.initial_stop-pos.entry_price);
       if (risk<=0) continue;
       const unreal = pos.direction==='long' ? (p-pos.entry_price)/risk : (pos.entry_price-p)/risk;
@@ -200,70 +308,35 @@ async function tick(){
         else { const ns=pos.entry_price-0.30*risk; if(ns<pos.stop_price) pos.stop_price=ns; }
       }
       if (unreal>=2.2){
-        if (pos.direction==='long'){ const ns=pos.entry_price+1.20*risk; if(ns>pos.stop_price) pos.stop_price=ns; }
-        else { const ns=pos.entry_price-1.20*risk; if(ns<pos.stop_price) pos.stop_price=ns; }
+        // chandelier branch — mirrors scanner_worker.step_a_update_positions
+        const arch = pos.arch || '';
+        const floor = pos.direction==='long' ? pos.entry_price+1.20*risk : pos.entry_price-1.20*risk;
+        let ns = floor;
+        if (arch==='F3_BREAKOUT' || arch==='T10_SOROS'){
+          const atr = Number(pos.atr != null ? pos.atr : (pos.atr_val != null ? pos.atr_val : NaN));
+          if (Number.isFinite(atr) && atr>0){
+            if (pos.direction==='long'){
+              const hh = Number(pos.highest_high != null ? pos.highest_high : Math.max(pos.entry_price, p));
+              ns = Math.max(floor, hh - 2.0*atr);
+            } else {
+              const ll = Number(pos.lowest_low != null ? pos.lowest_low : Math.min(pos.entry_price, p));
+              ns = Math.min(floor, ll + 2.0*atr);
+            }
+          }
+        }
+        if (pos.direction==='long'){ if(ns>pos.stop_price) pos.stop_price=ns; }
+        else { if(ns<pos.stop_price) pos.stop_price=ns; }
       }
-      let exit=null, reason=null;
-      if (pos.direction==='long'){
-        if (p <= pos.stop_price){ exit=pos.stop_price; reason='stop'; }
-        else if (p >= pos.target_price){ exit=pos.target_price; reason='target'; }
-      } else {
-        if (p >= pos.stop_price){ exit=pos.stop_price; reason='stop'; }
-        else if (p <= pos.target_price){ exit=pos.target_price; reason='target'; }
-      }
-      if (exit!=null){
-        const pnl = pos.direction==='long' ? (exit-pos.entry_price)/risk : (pos.entry_price-exit)/risk;
-        const costPct = costForMarket(pos.market);
-        const slip = reason==='stop' ? 0.0005 : 0;
-        const costR = (costPct+slip)*pos.entry_price/risk;
-        const pnlNet = pnl - costR;
-        ledger.account.equity += pnlNet * pos.risk_capital;
-        const bs = ledger.block_stats;
-        if (pnlNet>0){ bs.consecutive_losses=0; bs.blocked=false; }
-        else { bs.consecutive_losses=(bs.consecutive_losses||0)+1; if(bs.consecutive_losses>=3) bs.blocked=true; }
-        ledger.closed_trades.push({
-          order_id: pos.order_id, symbol: pos.symbol, market: pos.market, tf: pos.tf, arch: pos.arch,
-          direction: pos.direction, entry_time: pos.entry_time, exit_time: now,
-          entry_price: pos.entry_price, exit_price: exit, pnl_r: Number(pnlNet.toFixed(4)), reason: reason
-        });
-        open.splice(i,1);
-      } else {
-        pos.unrealized_r = unreal;
-      }
+      pos.unrealized_r = unreal;
     }
-    // pending fills
+    // pending orders: live price refresh only (no browser fills)
     const pending = ledger.pending_orders;
-    for (let i=pending.length-1;i>=0;i--){
-      const o = pending[i];
+    for (const o of pending){
       const p = prices[o.symbol];
       if (p==null) continue;
-      if (open.length >= 1) continue;
-      if (ledger.block_stats.blocked) continue;
-      const fill = o.direction==='long' ? (p <= o.limit_price) : (p >= o.limit_price);
-      if (!fill) continue;
-      const hex = await sha256Hex(o.order_id + now);
-      if (isRejectedHash(hex)) continue;
-      const risk = Math.abs(o.limit_price - o.stop_price);
-      if (risk<=0) continue;
-      const equity = ledger.account.equity;
-      open.push({
-        order_id: o.order_id, symbol: o.symbol, market: o.market, tf: o.tf, arch: o.arch,
-        direction: o.direction, entry_time: now, entry_price: o.limit_price,
-        stop_price: o.stop_price, initial_stop: o.stop_price, target_price: o.target_price,
-        risk_capital: equity * ledger.account.risk_pct, unrealized_r: 0, seal_sha256: o.seal_sha256
-      });
-      pending.splice(i,1);
+      o.last_price = p;
     }
-    // mark-to-market remaining
-    for (const pos of open){
-      const p = prices[pos.symbol];
-      if (p==null) continue;
-      const risk = pos.direction==='long' ? (pos.entry_price-pos.initial_stop) : (pos.initial_stop-pos.entry_price);
-      if (risk>0){
-        pos.unrealized_r = pos.direction==='long' ? (p-pos.entry_price)/risk : (pos.entry_price-p)/risk;
-      }
-    }
-    ledger.last_run = now;
+    ledger.last_browser_tick = now;
     equitySeries.push({t: Date.now(), equity: ledger.account.equity});
     if (equitySeries.length>300) equitySeries.shift();
     lastTick = now;
@@ -299,7 +372,7 @@ function renderAll(){
     const p = prices[pos.symbol];
     const tr = document.createElement('tr');
     const unreal = pos.unrealized_r||0;
-    tr.innerHTML = `<td>${pos.symbol}</td><td>${pos.market}</td><td>${pos.tf}</td><td>${pos.arch}</td><td>${pos.direction}</td>
+    tr.innerHTML = `<td>${pos.symbol}</td><td>${pos.market}</td><td>${pos.tf}</td><td>${pos.arch}${kreilBadge(pos.kreil)}</td><td>${pos.direction}</td>
       <td>${pos.entry_price.toFixed(4)}</td><td>${p!=null?p.toFixed(4):'—'}</td><td>${pos.stop_price.toFixed(4)}</td><td>${pos.target_price.toFixed(4)}</td>
       <td class="${unreal>=0?'good':'bad'}">${unreal.toFixed(2)}</td><td>${pos.risk_capital.toFixed(2)}</td>
       <td class="mono">${(pos.seal_sha256||'').slice(0,10)}…</td>`;
@@ -315,9 +388,9 @@ function renderAll(){
     const o = pend[i];
     const p = prices[o.symbol];
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${o.symbol}</td><td>${o.market}</td><td>${o.tf}</td><td>${o.arch}</td><td>${o.direction}</td>
-      <td>${o.limit_price.toFixed(4)}</td><td>${p!=null?p.toFixed(4):'—'}</td><td>${o.stop_price.toFixed(4)}</td><td>${o.target_price.toFixed(4)}</td>
-      <td>${o.score.toFixed(2)}</td><td class="mono">${(o.seal_sha256||'').slice(0,10)}…</td>`;
+    tr.innerHTML = `<td>${o.symbol}</td><td>${o.market}</td><td>${o.tf}</td><td>${o.arch}${kreilBadge(o.kreil)}</td><td>${o.direction}</td>
+      <td>${Number(o.limit_price).toFixed(4)}</td><td>${p!=null?p.toFixed(4):'—'}</td><td>${Number(o.stop_price).toFixed(4)}</td><td>${Number(o.target_price).toFixed(4)}</td>
+      <td>${Number(o.score).toFixed(2)}</td><td class="mono">${(o.seal_sha256||'').slice(0,10)}…</td>`;
     pb.appendChild(tr);
   }
   document.getElementById('pendSub').textContent = pend.length+' orders';
@@ -373,15 +446,49 @@ function drawEquity(){
   }
 }
 
-async function verifySeals(){
-  const out = [];
-  const sample = (ledger.pending_orders||[]).slice(0,8);
-  for (const o of sample){
-    const msg = `${o.symbol}|${o.tf}|${o.arch}|${o.direction}|${o.placed_bar_time}|${Number(o.limit_price).toFixed(6)}|${Number(o.stop_price).toFixed(6)}|${Number(o.target_price).toFixed(6)}`;
-    const hex = await sha256Hex(msg);
-    out.push(o.order_id.slice(0,28)+' → '+(hex===o.seal_sha256?'OK':'MISMATCH'));
+function normalizePositions(){
+  if (!ledger || !Array.isArray(ledger.open_positions)) return;
+  for (const p of ledger.open_positions){
+    if (!p) continue;
+    if (p.stop_price == null && p.stop != null) p.stop_price = p.stop;
+    // preserve the entry stop so ratcheting never breaks seal verification
+    if (p.initial_stop == null) p.initial_stop = p.stop_price;
   }
-  alert('Seal verification (sample 8 pending):\n'+out.join('\n'));
+}
+
+function placedBarTimeOf(rec){
+  if (rec.placed_bar_time != null) return rec.placed_bar_time;
+  const parts = String(rec.order_id || '').split('|');
+  return parts.length >= 5 ? parts[4] : '';
+}
+
+function sealMessage(rec, stopValue){
+  const pbt = placedBarTimeOf(rec);
+  return `${rec.symbol}|${rec.tf}|${rec.arch}|${rec.direction}|${pbt}|${Number(rec.limit_price != null ? rec.limit_price : rec.entry_price).toFixed(6)}|${Number(stopValue).toFixed(6)}|${Number(rec.target_price).toFixed(6)}`;
+}
+
+async function verifySeals(){
+  if (!ledger) return;
+  const out = [];
+  let checked = 0, mismatches = 0;
+  // ALL open positions — use initial_stop (entry stop) so a ratchet never false-fails
+  for (const p of (ledger.open_positions||[])){
+    const stop = (p.initial_stop != null ? p.initial_stop : (p.stop != null ? p.stop : p.stop_price));
+    if (stop == null || p.entry_price == null) continue;
+    const hex = await sha256Hex(sealMessage(p, stop));
+    const ok = hex === p.seal_sha256;
+    checked++; if (!ok) mismatches++;
+    out.push('POS ' + String(p.order_id).slice(0,28) + ' → ' + (ok?'OK':'MISMATCH'));
+  }
+  // ALL pending orders (no slicing)
+  for (const o of (ledger.pending_orders||[])){
+    const hex = await sha256Hex(sealMessage(o, o.stop_price));
+    const ok = hex === o.seal_sha256;
+    checked++; if (!ok) mismatches++;
+    out.push('PEND ' + String(o.order_id).slice(0,28) + ' → ' + (ok?'OK':'MISMATCH'));
+  }
+  const head = `Seal verification: ${checked} records (${(ledger.open_positions||[]).length} open, ${(ledger.pending_orders||[]).length} pending), ${mismatches} mismatch(es)`;
+  alert(head + '\n' + (out.length ? out.join('\n') : '(nothing to verify)'));
 }
 
 async function init(){
@@ -394,6 +501,9 @@ async function init(){
     if (!ledger.pending_orders) ledger.pending_orders=[];
     if (!ledger.closed_trades) ledger.closed_trades=[];
     if (!ledger.block_stats) ledger.block_stats={consecutive_losses:0,blocked:false};
+    normalizePositions();
+    serverLastRun = ledger.last_run || null;
+    seedPricesFromLedger(ledger, true);
     equitySeries.push({t:Date.now(), equity: ledger.account.equity});
     renderAll();
     await tick();
