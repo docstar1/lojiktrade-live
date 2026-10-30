@@ -65,8 +65,8 @@ canvas{width:100%;height:220px;background:var(--card);border:1px solid var(--bor
     <div class="card"><h3>Open Positions</h3><div class="val" id="openCount">0</div><div class="sub">Marked to market live</div></div>
     <div class="card"><h3>Pending Orders</h3><div class="val" id="pendCount">0</div><div class="sub">Resting limits</div></div>
     <div class="card"><h3>Closed Trades</h3><div class="val" id="closedCount">0</div><div class="sub">Realized</div></div>
-    <div class="card"><h3>Elder 2%/6% & 3-Loss Guard</h3><div class="val" id="blockState">OK</div><div class="sub" id="blockSub">Consecutive losses: 0 | s_min: 2.6 | monthly DD: 0.0%</div></div>
-    <div class="card"><h3>Risk %</h3><div class="val" id="riskPct">2.0%</div><div class="sub">Per trade</div></div>
+    <div class="card"><h3>Elder 1.5%/6% &amp; Risk Guard</h3><div class="val" id="blockState">OK</div><div class="sub" id="blockSub">Consecutive losses: 0 | s_min: 2.6 | min_rr: 1.8 | monthly DD: 0.0%</div></div>
+    <div class="card"><h3>Risk %</h3><div class="val" id="riskPct">1.5%</div><div class="sub">Per trade &middot; max 3 slots (1 per market bucket)</div></div>
   </div>
 
   <div class="section">
@@ -251,7 +251,7 @@ async function refreshLedgerFromServer(){
     const fetched = await r.json();
     if (!fetched || typeof fetched !== 'object') return;
     // normalize
-    if (!fetched.account) fetched.account = {equity:100, risk_pct:0.02, target:1000};
+    if (!fetched.account) fetched.account = {equity:100, risk_pct:0.015, target:1000};
     if (!fetched.open_positions) fetched.open_positions = [];
     if (!fetched.pending_orders) fetched.pending_orders = [];
     if (!fetched.closed_trades) fetched.closed_trades = [];
@@ -360,7 +360,7 @@ function renderAll(){
   const bs = ledger.block_stats;
   document.getElementById('blockState').textContent = bs.blocked ? 'BLOCKED' : 'OK';
   document.getElementById('blockState').className = 'val ' + (bs.blocked?'bad':'good');
-  document.getElementById('blockSub').textContent = 'Consecutive losses: '+(bs.consecutive_losses||0)+' | s_min: '+(bs.s_min_current||2.6)+' | monthly DD: '+(((bs.monthly_dd_pct||0)*100).toFixed(1))+'%';
+  document.getElementById('blockSub').textContent = 'Consecutive losses: '+(bs.consecutive_losses||0)+' | s_min: '+(bs.s_min_current||2.6)+' | min_rr: '+(bs.min_rr_current||1.8)+' | monthly DD: '+(((bs.monthly_dd_pct||0)*100).toFixed(1))+'%'+(bs.block_until?' | until '+(new Date(bs.block_until)).toUTCString():'');
   document.getElementById('riskPct').textContent = (acct.risk_pct*100).toFixed(1)+'%';
   const pct = Math.min(100, Math.max(0, (acct.equity-100)/(1000-100)*100));
   document.getElementById('eqProgress').style.width = pct+'%';
@@ -378,7 +378,7 @@ function renderAll(){
       <td class="mono">${(pos.seal_sha256||'').slice(0,10)}…</td>`;
     ob.appendChild(tr);
   }
-  document.getElementById('openSub').textContent = ledger.open_positions.length+' positions';
+  document.getElementById('openSub').textContent = ledger.open_positions.length+' / 3 positions (max 1 per market bucket)';
 
   // pending (cap render to 500)
   const pb = document.getElementById('pendBody');
@@ -496,7 +496,7 @@ async function init(){
     let r;
     try { r = await fetch(LEDGER_LOCAL_URL); if(!r.ok) throw new Error(r.status); }
     catch(e){ r = await fetch(LEDGER_CLOUD_URL); if(!r.ok) throw new Error(r.status); }
-    ledger = await r.json();    if (!ledger.account) ledger.account = {equity:100, risk_pct:0.02, target:1000};
+    ledger = await r.json();    if (!ledger.account) ledger.account = {equity:100, risk_pct:0.015, target:1000};
     if (!ledger.open_positions) ledger.open_positions=[];
     if (!ledger.pending_orders) ledger.pending_orders=[];
     if (!ledger.closed_trades) ledger.closed_trades=[];
