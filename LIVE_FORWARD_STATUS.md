@@ -1,6 +1,6 @@
 # Live Forward Scanner Status
 
-Last run: 2026-10-30T20:30:04.232242+00:00
+Last run: 2026-10-30T20:30:48.862051+00:00
 
 ## Account
 - Equity: $100.39 (target $1000.00)
@@ -24,7 +24,7 @@ Last run: 2026-10-30T20:30:04.232242+00:00
 | LTC-USD | Crypto | 1d | P3_SWEEP | long | 55.1980 | 52.6377 | 60.5745 | 3.52 |
 | AMD | US | 1d | P3_SWEEP | long | 502.6000 | 484.1920 | 541.2569 | 3.41 |
 | SOL-USD | Crypto | 1d | P3_SWEEP | long | 95.4941 | 91.9219 | 102.9958 | 3.41 |
-| NEAR-USD | Crypto | 1d | P3_SWEEP | long | 4.0455 | 3.8302 | 4.4978 | 3.39 |
+| NEAR-USD | Crypto | 1d | P3_SWEEP | long | 4.0455 | 3.8302 | 4.4978 | 3.40 |
 | INFY.NS | IndiaNSE | 1h | F3_BREAKOUT | long | 1176.4926 | 1132.2103 | 1273.9135 | 3.30 |
 | COIN | US | 1d | F3_BREAKOUT | short | 157.8466 | 184.4326 | 99.3575 | 2.96 |
 
