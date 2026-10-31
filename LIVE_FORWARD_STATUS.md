@@ -1,6 +1,6 @@
 # Live Forward Scanner Status
 
-Last run: 2026-10-31T20:40:46.317143+00:00
+Last run: 2026-10-31T23:45:31.942159+00:00
 
 ## Account
 - Equity: $100.79 (target $1000.00)
@@ -14,7 +14,7 @@ Last run: 2026-10-31T20:40:46.317143+00:00
 ## Open Positions
 | Symbol | Market | TF | Arch | Dir | Entry | Stop | Target | Unreal R |
 |---|---|---|---|---|---|---|---|---|
-| XRP-USD | Crypto | 1d | P3_SWEEP | long | 1.2568 | 1.1917 | 1.3935 | -0.12 |
+| XRP-USD | Crypto | 1d | P3_SWEEP | long | 1.2568 | 1.1917 | 1.3935 | -0.11 |
 
 ## Pending Orders
 | Symbol | Market | TF | Arch | Dir | Limit | Stop | Target | Score |
