@@ -1,12 +1,12 @@
 # Live Forward Scanner Status
 
-Last run: 2026-11-01T10:49:01.383263+00:00
+Last run: 2026-11-01T16:58:31.480746+00:00
 
 ## Account
 - Equity: $100.79 (target $1000.00)
 - Risk %: 1.5% (max 1.5%)
 - Open positions: 1 / 3 (max 1 per market bucket)
-- Pending orders: 7
+- Pending orders: 6
 - Closed trades: 1
 - Block stats: {'consecutive_losses': 0, 'blocked': False, 'cooldowns': [], 's_min_current': 2.6, 'min_rr_current': 1.8, 'monthly_dd_pct': 0.0, 'min_rr': 1.8}
 - Dynamic thresholds: s_min 2.6 | min_rr 1.8
@@ -14,7 +14,7 @@ Last run: 2026-11-01T10:49:01.383263+00:00
 ## Open Positions
 | Symbol | Market | TF | Arch | Dir | Entry | Stop | Target | Unreal R |
 |---|---|---|---|---|---|---|---|---|
-| XRP-USD | Crypto | 1d | P3_SWEEP | long | 1.2568 | 1.1917 | 1.3935 | -0.03 |
+| XRP-USD | Crypto | 1d | P3_SWEEP | long | 1.2568 | 1.1917 | 1.3935 | -0.13 |
 
 ## Pending Orders
 | Symbol | Market | TF | Arch | Dir | Limit | Stop | Target | Score |
@@ -23,7 +23,6 @@ Last run: 2026-11-01T10:49:01.383263+00:00
 | INFY.NS | IndiaNSE | 1h | F3_BREAKOUT | long | 1176.4926 | 1132.2103 | 1273.9135 | 3.30 |
 | COIN | US | 1d | F3_BREAKOUT | short | 158.3226 | 184.4326 | 100.8806 | 2.96 |
 | TRENT.NS | IndiaNSE | 1d | F3_BREAKOUT | long | 2941.5324 | 2667.2850 | 3544.8769 | 2.96 |
-| SOL-USD | Crypto | 1h | MA7_TRUE | short | 95.7376 | 96.5129 | 94.1870 | 2.95 |
 | AMZN | US | 15m | MA7_TRUE | short | 240.4942 | 242.9471 | 235.5883 | 2.80 |
 | CL=F | FXCommod | 1h | MA7_TRUE | long | 103.3827 | 101.8411 | 106.4658 | 2.80 |
 
