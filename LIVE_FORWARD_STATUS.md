@@ -1,12 +1,12 @@
 # Live Forward Scanner Status
 
-Last run: 2026-11-03T18:54:46.062203+00:00
+Last run: 2026-11-03T23:50:11.083307+00:00
 
 ## Account
 - Equity: $99.44 (target $1000.00)
 - Risk %: 1.5% (max 1.5%)
 - Open positions: 1 / 3 (max 1 per market bucket)
-- Pending orders: 5
+- Pending orders: 8
 - Closed trades: 3
 - Block stats: {'consecutive_losses': 1, 'blocked': False, 'cooldowns': [{'symbol': 'AMD', 'direction': 'long', 'tf': '1d', 'until': '2026-11-05 00:00:00+00:00'}], 's_min_current': 2.75, 'min_rr_current': 1.9, 'monthly_dd_pct': 0.013375444786083296, 'min_rr': 1.8}
 - Dynamic thresholds: s_min 2.75 | min_rr 1.9
@@ -24,6 +24,9 @@ Last run: 2026-11-03T18:54:46.062203+00:00
 | BEL.NS | IndiaNSE | 1d | MA7_TRUE | short | 378.5082 | 392.9789 | 349.5667 | 2.80 |
 | CL=F | FXCommod | 1d | MA7_TRUE | long | 97.3055 | 88.8648 | 114.1870 | 2.80 |
 | XLE | US | 1d | MA7_TRUE | long | 66.4628 | 63.6425 | 72.1032 | 2.80 |
+| AMAT | US | 15m | MA7_TRUE | short | 382.3092 | 385.6514 | 375.6249 | 2.80 |
+| PLTR | US | 15m | MA7_TRUE | short | 176.1692 | 178.6470 | 171.2135 | 2.80 |
+| QQQ | US | 15m | MA7_TRUE | short | 686.7362 | 689.3324 | 681.5437 | 2.80 |
 
 ## Recent Closed Trades
 | Symbol | Market | TF | Arch | Dir | PnL R | Reason |
