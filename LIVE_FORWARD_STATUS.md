@@ -1,6 +1,6 @@
 # Live Forward Scanner Status
 
-Last run: 2026-11-03T04:02:28.294230+00:00
+Last run: 2026-11-03T11:54:15.979524+00:00
 
 ## Account
 - Equity: $100.79 (target $1000.00)
@@ -14,18 +14,18 @@ Last run: 2026-11-03T04:02:28.294230+00:00
 ## Open Positions
 | Symbol | Market | TF | Arch | Dir | Entry | Stop | Target | Unreal R |
 |---|---|---|---|---|---|---|---|---|
-| XRP-USD | Crypto | 1d | P3_SWEEP | long | 1.2568 | 1.1917 | 1.3935 | -0.12 |
-| INFY.NS | IndiaNSE | 1h | F3_BREAKOUT | long | 1176.4926 | 1132.2103 | 1273.9135 | -0.43 |
+| XRP-USD | Crypto | 1d | P3_SWEEP | long | 1.2568 | 1.1917 | 1.3935 | -0.00 |
+| INFY.NS | IndiaNSE | 1h | F3_BREAKOUT | long | 1176.4926 | 1132.2103 | 1273.9135 | -0.64 |
 | AMD | US | 1d | P3_SWEEP | long | 502.6000 | 484.1614 | 541.3210 | -1.94 |
 
 ## Pending Orders
 | Symbol | Market | TF | Arch | Dir | Limit | Stop | Target | Score |
 |---|---|---|---|---|---|---|---|---|
+| SBIN.NS | IndiaNSE | 1d | P3_SWEEP | short | 987.7500 | 1011.6295 | 937.6031 | 3.63 |
 | AMAT | US | 1h | F3_BREAKOUT | short | 379.6134 | 399.9295 | 334.9179 | 3.04 |
 | COIN | US | 1d | F3_BREAKOUT | short | 158.3226 | 184.4326 | 100.8806 | 2.96 |
-| INFY.NS | IndiaNSE | 1h | MA7_TRUE | long | 1155.9438 | 1139.1459 | 1189.5395 | 2.95 |
-| TCS.NS | IndiaNSE | 1h | MA7_TRUE | long | 2501.3389 | 2469.7746 | 2564.4675 | 2.95 |
 | BEL.NS | IndiaNSE | 1d | MA7_TRUE | short | 378.5082 | 392.9789 | 349.5667 | 2.80 |
+| CL=F | FXCommod | 1d | MA7_TRUE | long | 97.3055 | 88.8648 | 114.1870 | 2.80 |
 
 ## Recent Closed Trades
 | Symbol | Market | TF | Arch | Dir | PnL R | Reason |
