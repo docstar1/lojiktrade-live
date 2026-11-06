@@ -1,21 +1,20 @@
 # Live Forward Scanner Status
 
-Last run: 2026-11-06T01:48:51.034462+00:00
+Last run: 2026-11-06T08:49:39.959312+00:00
 
 ## Account
-- Equity: $96.16 (target $1000.00)
+- Equity: $94.59 (target $1000.00)
 - Risk %: 1.5% (max 1.5%)
-- Open positions: 2 / 3 (max 1 per market bucket)
+- Open positions: 1 / 3 (max 1 per market bucket)
 - Pending orders: 7
-- Closed trades: 5
-- Block stats: {'consecutive_losses': 2, 'blocked': False, 'cooldowns': [{'symbol': 'AMD', 'direction': 'long', 'tf': '1d', 'until': '2026-11-05 00:00:00+00:00'}, {'symbol': 'INFY.NS', 'direction': 'long', 'tf': '1h', 'until': '2026-11-04 09:45:00+00:00'}, {'symbol': 'ETH-USD', 'direction': 'short', 'tf': '1h', 'until': '2026-11-04 12:00:00+00:00'}], 's_min_current': 2.9, 'min_rr_current': 2.0, 'monthly_dd_pct': 0.045957646405436696, 'min_rr': 1.8, 'loss_block_expired_at': '2026-11-04 19:56:59.292330+00:00'}
+- Closed trades: 6
+- Block stats: {'consecutive_losses': 3, 'blocked': True, 'cooldowns': [{'symbol': 'AMD', 'direction': 'long', 'tf': '1d', 'until': '2026-11-05 00:00:00+00:00'}, {'symbol': 'INFY.NS', 'direction': 'long', 'tf': '1h', 'until': '2026-11-04 09:45:00+00:00'}, {'symbol': 'ETH-USD', 'direction': 'short', 'tf': '1h', 'until': '2026-11-04 12:00:00+00:00'}, {'symbol': 'SBIN.NS', 'direction': 'short', 'tf': '1d', 'until': '2026-11-08 00:00:00+00:00'}], 's_min_current': 2.9, 'min_rr_current': 2.0, 'monthly_dd_pct': 0.061486384107814436, 'min_rr': 1.8, 'loss_block_expired_at': '2026-11-04 19:56:59.292330+00:00', 'block_reason': 'ELDER_6PCT_PIRANHA_GUARD'}
 - Dynamic thresholds: s_min 2.9 | min_rr 2.0
 
 ## Open Positions
 | Symbol | Market | TF | Arch | Dir | Entry | Stop | Target | Unreal R |
 |---|---|---|---|---|---|---|---|---|
-| SBIN.NS | IndiaNSE | 1d | P3_SWEEP | short | 987.7500 | 1011.6295 | 937.6031 | 0.37 |
-| XLE | US | 1d | P3_SWEEP | long | 63.0400 | 62.2273 | 64.7466 | 0.59 |
+| XLE | US | 1d | P3_SWEEP | long | 63.0400 | 62.2273 | 64.7466 | -1.74 |
 
 ## Pending Orders
 | Symbol | Market | TF | Arch | Dir | Limit | Stop | Target | Score |
@@ -36,3 +35,4 @@ Last run: 2026-11-06T01:48:51.034462+00:00
 | AMD | US | 1d | P3_SWEEP | long | -1.2486 | stop |
 | INFY.NS | IndiaNSE | 1h | F3_BREAKOUT | long | -1.0425 | stop |
 | ETH-USD | Crypto | 1h | MA7_TRUE | short | -1.1634 | stop |
+| SBIN.NS | IndiaNSE | 1d | P3_SWEEP | short | -1.0662 | stop |
