@@ -95,7 +95,7 @@ footer{padding:14px 20px;border-top:1px solid var(--border);font-size:12px;color
     <div class="pot pot2">
       <div class="pot-title"><span class="pot-tag">POT 2</span>Growth pot &middot; LojikTrade engine</div>
       <div class="val" id="equity">$0.00</div>
-      <div class="sub">Target $1,000.00 &middot; <span id="riskPct">3.0%</span> per trade &middot; IndiaNSE pool only &middot; max 3 slots</div>
+      <div class="sub">Target \u20B95,00,000 &middot; <span id="riskPct">3.0%</span> risk per trade &middot; IndiaNSE pool only &middot; max 3 slots</div>
       <div class="progress"><div id="eqProgress" style="width:0%"></div></div>
       <div class="mini">
         <div><div class="k">Open</div><div class="v" id="openCount">0</div></div>
@@ -136,11 +136,19 @@ footer{padding:14px 20px;border-top:1px solid var(--border);font-size:12px;color
     </table></div>
   </div>
 </div>
-<footer>Two pots, one plan &middot; Rs 1,000/month draw target &middot; Pot 2 trades NSE stocks only (US/crypto/FX legs don't pay their costs at this pot size) &middot; figures are paper-test units until the Rs 50k funding &middot; data refreshes from ledger.json on every cloud scan</footer>
+<footer>Two pots, one plan &middot; Rs 1,000/month draw target &middot; Pot 2 trades NSE stocks only (US/crypto/FX legs don't pay their costs at this pot size) &middot; paper $1 = Rs 500, headline figures shown in rupees, trade tables stay in paper units &middot; data refreshes from ledger.json on every cloud scan</footer>
 
 <script>
 const LEDGER_LOCAL_URL = 'ledger.json?t=' + Date.now();
-const LEDGER_CLOUD_URL = 'https://raw.githubusercontent.com/docstar1/lojiktrade-live/main/ledger.json?t=' + Date.now();let ledger = null; let serverLastRun = null;
+const LEDGER_CLOUD_URL = 'https://raw.githubusercontent.com/docstar1/lojiktrade-live/main/ledger.json?t=' + Date.now();const SITE_PASS_HASH = '4d3c9183e8d216fe10c2dfdb08fd640a62e309029b05da8adc553869e9faea8c';
+async function gate(){
+  const pw = prompt('LojikTrade dashboard password');
+  if (pw == null) return false;
+  const h = await sha256Hex(pw);
+  return h === SITE_PASS_HASH;
+}
+function inrFmt(u){ return Math.round(u*500).toLocaleString('en-IN'); }
+let ledger = null; let serverLastRun = null;
 let prices = {};
 let equitySeries = [];
 let lastTick = null;
@@ -386,7 +394,7 @@ async function tick(){
 function renderAll(){
   if(!ledger) return;
   const acct = ledger.account;
-  document.getElementById('equity').textContent = '$'+acct.equity.toFixed(2);
+  document.getElementById('equity').textContent = '\u20B9'+inrFmt(acct.equity);
   document.getElementById('openCount').textContent = ledger.open_positions.length;
   document.getElementById('pendCount').textContent = ledger.pending_orders.length;
   document.getElementById('closedCount').textContent = ledger.closed_trades.length;
@@ -510,7 +518,7 @@ function drawEquity(){
   // target
   ctx.strokeStyle = '#f59e0b'; ctx.setLineDash([6,4]);
   ctx.beginPath(); ctx.moveTo(0,y(1000)); ctx.lineTo(W,y(1000)); ctx.stroke(); ctx.setLineDash([]);
-  ctx.fillStyle='#f59e0b'; ctx.font='11px sans-serif'; ctx.fillText('target $1000', 8, y(1000)-4);
+  ctx.fillStyle='#f59e0b'; ctx.font='11px sans-serif'; ctx.fillText('target \u20B95,00,000', 8, y(1000)-4);
   if (equitySeries.length>=2){
     ctx.strokeStyle='#3b82f6'; ctx.lineWidth=2;
     ctx.beginPath();
@@ -574,6 +582,11 @@ async function verifySeals(){
 }
 
 async function init(){
+  const unlocked = await gate();
+  if (!unlocked){
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#94a3b8;font-family:Segoe UI,sans-serif">Locked. Wrong password (or cancelled). Refresh to try again.</div>';
+    return;
+  }
   try{
     let r;
     try { r = await fetch(LEDGER_LOCAL_URL); if(!r.ok) throw new Error(r.status); }
