@@ -50,6 +50,10 @@ WATCHLIST = {
     },
 }
 
+# 2026-11-09: pool restricted to IndiaNSE (cost model: US/crypto/FX-commodity legs
+# don't pay their costs at this pot size; crypto additionally 30% flat tax).
+NSE_ONLY = True
+
 TF_PERIOD = {"15m": "15d", "1h": "60d", "1d": "2y"}
 TF_SEC = {"15m": 900, "1h": 3600, "1d": 86400}
 
@@ -1813,6 +1817,21 @@ def main():
     if not isinstance(open_positions, list):
         open_positions = []
         ledger["open_positions"] = open_positions
+    open_syms = {p.get("symbol", "") for p in open_positions}
+    if NSE_ONLY:
+        kept = []
+        for o in ledger.get("pending_orders", []):
+            sym = str(o.get("symbol", ""))
+            if sym.endswith(".NS") or o.get("symbol") in open_syms:
+                kept.append(o)
+            else:
+                ledger.setdefault("block_stats", {}).setdefault("cancelled_orders", []).append(
+                    {"order_id": o.get("order_id"), "symbol": o.get("symbol"),
+                     "reason": "NSE-only pool restriction (2026-11-09): non-India legs don't pay costs at this pot size"})
+        dropped = len(ledger.get("pending_orders", [])) - len(kept)
+        if dropped:
+            print(f"NSE-only restriction: cancelled {dropped} non-NSE pending order(s)")
+        ledger["pending_orders"] = kept
     enforce_risk_pct(ledger)
     update_block_stats(ledger)
 
@@ -1838,6 +1857,8 @@ def main():
             for tf in info["tfs"]:
                 df = data.get((symbol, tf))
                 if df is None:
+                    continue
+                if NSE_ONLY and market != "IndiaNSE" and symbol not in open_syms:
                     continue
                 sigs = run_detectors(symbol, df, tf, market)
                 for sig in sigs:
@@ -2031,6 +2052,7 @@ def write_status(ledger):
     lines.append("- Pot 1 (income): Cover constant-mix sleeve - 50% Nifty + 1/6 gold (INR) + 1/6 USDINR + 1/6 oil, rebalanced monthly. Tracked by pot1.py in ledger.json under 'pot1'. Expect roughly +13%/yr with mild drawdowns.")
     lines.append("- Pot 2 (growth): this engine, risk per trade raised 1.5% -> 3.0% per the 5-year walk-forward ($100 -> $235 at 3.0%, maxDD ~$14; 6% collapses). Raise to 4.5% only after live results confirm the backtest.")
     lines.append("- Harvest floor raised 0.15R -> 0.50R (5y: banking at 0.15R cut winners). Soros gate dropped (5y: it blocked 917 of ~1,040 entries and cut $177 to $110).")
+    lines.append("- Pool restricted to IndiaNSE symbols (2026-11-09, cost model): US/crypto/FX legs stay out; existing non-NSE positions keep being managed until they close.")
     STATUS_MD.write_text("\n".join(lines), encoding="utf-8")
 
 
