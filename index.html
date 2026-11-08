@@ -67,6 +67,7 @@ canvas{width:100%;height:220px;background:var(--card);border:1px solid var(--bor
     <div class="card"><h3>Closed Trades</h3><div class="val" id="closedCount">0</div><div class="sub">Realized</div></div>
     <div class="card"><h3>Elder 1.5%/6% &amp; Risk Guard</h3><div class="val" id="blockState">OK</div><div class="sub" id="blockSub">Consecutive losses: 0 | s_min: 2.6 | min_rr: 1.8 | monthly DD: 0.0%</div></div>
     <div class="card"><h3>Risk %</h3><div class="val" id="riskPct">1.5%</div><div class="sub">Per trade &middot; max 3 slots (1 per market bucket)</div></div>
+    <div class="card"><h3>Pot 1 Sleeve</h3><div class="val" id="pot1Nav">&mdash;</div><div class="sub" id="pot1Sub">ETF mix: 50% Nifty &middot; gold &middot; USD &middot; oil &middot; monthly rebalance</div></div>
   </div>
 
   <div class="section">
@@ -251,7 +252,7 @@ async function refreshLedgerFromServer(){
     const fetched = await r.json();
     if (!fetched || typeof fetched !== 'object') return;
     // normalize
-    if (!fetched.account) fetched.account = {equity:100, risk_pct:0.015, target:1000};
+    if (!fetched.account) fetched.account = {equity:100, risk_pct:0.03, target:1000};
     if (!fetched.open_positions) fetched.open_positions = [];
     if (!fetched.pending_orders) fetched.pending_orders = [];
     if (!fetched.closed_trades) fetched.closed_trades = [];
@@ -362,6 +363,11 @@ function renderAll(){
   document.getElementById('blockState').className = 'val ' + (bs.blocked?'bad':'good');
   document.getElementById('blockSub').textContent = 'Consecutive losses: '+(bs.consecutive_losses||0)+' | s_min: '+(bs.s_min_current||2.6)+' | min_rr: '+(bs.min_rr_current||1.8)+' | monthly DD: '+(((bs.monthly_dd_pct||0)*100).toFixed(1))+'%'+(bs.block_until?' | until '+(new Date(bs.block_until)).toUTCString():'');
   document.getElementById('riskPct').textContent = (acct.risk_pct*100).toFixed(1)+'%';
+  const p1 = ledger.pot1;
+  if (p1) {
+    document.getElementById('pot1Nav').textContent = (p1.total_return_pct>=0?'+':'') + Number(p1.total_return_pct).toFixed(2) + '%';
+    document.getElementById('pot1Sub').textContent = 'Sleeve NAV ' + Number(p1.nav).toFixed(4) + ' &middot; next rebalance ' + p1.next_rebalance;
+  }
   const pct = Math.min(100, Math.max(0, (acct.equity-100)/(1000-100)*100));
   document.getElementById('eqProgress').style.width = pct+'%';
 

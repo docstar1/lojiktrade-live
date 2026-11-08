@@ -57,8 +57,10 @@ MAX_OPEN_POSITIONS = 3
 MAX_PENDING_GLOBAL = 8
 MAX_PENDING_PER_SYMBOL = 1
 COOLDOWN_BARS = 5
-# 1.5% risk per trade x 3 concurrent slots = 4.5% max simultaneous risk.
-MAX_RISK_PCT = 0.015
+# 3.0% risk per trade x 3 concurrent slots = 9.0% max simultaneous risk.
+# 2026-11-09: dial raised from 1.5% per the 5-year walk-forward (3.0% risk:
+# $100 -> $235, ~+18.7%/yr, maxDD ~$14; 4.5%: $336, maxDD ~$21; 6.0% collapses).
+MAX_RISK_PCT = 0.03
 # 12-hour time-based cooldown after 3 consecutive losses (was a permanent block).
 LOSS_BLOCK_HOURS = 12.0
 ALLOWED_ARCHS = {"T10_SOROS", "F1_SOROS_MA", "MA7_TRUE", "P3_SWEEP", "F3_BREAKOUT"}
@@ -816,7 +818,7 @@ def default_ledger():
     return {
         "account": {
             "equity": 100.0,
-            "risk_pct": 0.015,
+            "risk_pct": 0.03,
             "target": 1000.0,
             "month_start_equity": 100.0,
             "current_month": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m"),
@@ -840,14 +842,14 @@ def default_ledger():
 
 def enforce_risk_pct(ledger):
     acct = ledger.setdefault("account", {})
-    rp = acct.get("risk_pct", 0.015)
+    rp = acct.get("risk_pct", 0.03)
     try:
         rp = float(rp)
     except (TypeError, ValueError):
-        rp = 0.015
+        rp = 0.03
     acct["risk_pct"] = min(rp, MAX_RISK_PCT)
     if acct["risk_pct"] <= 0:
-        acct["risk_pct"] = 0.015
+        acct["risk_pct"] = 0.03
     if "equity" not in acct:
         acct["equity"] = 100.0
     if "target" not in acct:
@@ -1427,7 +1429,9 @@ def step_a_update_positions(ledger, data):
             held = int(pos["bars_held"])
             # Close & move on: bank a small profit once the trade has had its
             # allotted time, freeing the slot for a fresh setup.
-            if held >= profit_harvest_bars(tf) and unreal_now >= 0.15:
+            # Harvest floor raised 0.15R -> 0.5R per the 5-year walk-forward
+            # (2026-11-07): banking at 0.15R cut winners.
+            if held >= profit_harvest_bars(tf) and unreal_now >= 0.50:
                 exited = True
                 reason = "TIME_PROFIT_HARVEST"
                 exit_price = last_price
@@ -2013,6 +2017,11 @@ def write_status(ledger):
     else:
         lines.append("_None_")
     lines.append("")
+    lines.append("")
+    lines.append("## Two-pot plan (2026-11-09)")
+    lines.append("- Pot 1 (income): Cover constant-mix sleeve - 50% Nifty + 1/6 gold (INR) + 1/6 USDINR + 1/6 oil, rebalanced monthly. Tracked by pot1.py in ledger.json under 'pot1'. Expect roughly +13%/yr with mild drawdowns.")
+    lines.append("- Pot 2 (growth): this engine, risk per trade raised 1.5% -> 3.0% per the 5-year walk-forward ($100 -> $235 at 3.0%, maxDD ~$14; 6% collapses). Raise to 4.5% only after live results confirm the backtest.")
+    lines.append("- Harvest floor raised 0.15R -> 0.50R (5y: banking at 0.15R cut winners). Soros gate dropped (5y: it blocked 917 of ~1,040 entries and cut $177 to $110).")
     STATUS_MD.write_text("\n".join(lines), encoding="utf-8")
 
 

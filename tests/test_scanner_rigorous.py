@@ -2,6 +2,7 @@
 from collections import Counter
 import numpy as np
 import pandas as pd
+import datetime
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, ROOT)
@@ -103,7 +104,7 @@ def set_row(df, idx, **overrides):
 def _base_ledger():
     return {
         "account": {"equity": 100.0, "risk_pct": 0.02, "target": 1000.0,
-                    "month_start_equity": 100.0, "current_month": "2026-10"},
+                    "month_start_equity": 100.0, "current_month": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m")},
         "open_positions": [],
         "pending_orders": [],
         "closed_trades": [],
@@ -259,21 +260,21 @@ def test_4_soros():
 def test_5_elder_2pct_shark():
     L = {"account": {"equity": 100.0, "risk_pct": 0.05, "target": 1000.0}}
     sw.enforce_risk_pct(L)
-    assert L["account"]["risk_pct"] == 0.015
+    assert L["account"]["risk_pct"] == 0.03
     L2 = {"account": {"equity": 100.0, "risk_pct": 0.05, "target": 1000.0}}
     sw.enforce_risk_pct(L2)
     assert L2["account"]["risk_pct"] <= sw.MAX_RISK_PCT
-    assert L2["account"]["risk_pct"] == 0.015
-    # a legacy 2.0% ledger is clamped down to the new 1.5% cap
+    assert L2["account"]["risk_pct"] == 0.03
+    # a legacy 2.0% ledger sits below the new 3.0% cap and passes through unchanged
     L3 = {"account": {"equity": 100.0, "risk_pct": 0.02, "target": 1000.0}}
     sw.enforce_risk_pct(L3)
-    assert L3["account"]["risk_pct"] == 0.015
-    assert sw.MAX_RISK_PCT == 0.015
+    assert L3["account"]["risk_pct"] == 0.02
+    assert sw.MAX_RISK_PCT == 0.03
     assert sw.MAX_OPEN_POSITIONS == 3
-    # 3 slots x 1.5% = 4.5% max simultaneous risk
-    assert abs(sw.MAX_RISK_PCT * sw.MAX_OPEN_POSITIONS - 0.045) < 1e-12
+    # 3 slots x 3.0% = 9.0% max simultaneous risk
+    assert abs(sw.MAX_RISK_PCT * sw.MAX_OPEN_POSITIONS - 0.09) < 1e-12
     D = sw.default_ledger()
-    assert D["account"]["risk_pct"] == 0.015
+    assert D["account"]["risk_pct"] == 0.03
     assert D["block_stats"]["min_rr"] == 1.8
     assert D["block_stats"]["min_rr_current"] == 1.8
     assert D["block_stats"]["s_min_current"] == 2.6
@@ -900,10 +901,10 @@ def test_21_bucket_helpers_and_ledger_migration():
     assert len(sw.bucket_positions(pos, "FXCommod")) == 1
     assert len(sw.bucket_positions(pos, "Crypto")) == 1
 
-    # a legacy 2% ledger is migrated to 1.5% and gains the min_rr floor
+    # a legacy 2% ledger keeps its risk (below the 3% cap) and gains the min_rr floor
     legacy = {
         "account": {"equity": 100.0, "risk_pct": 0.02, "target": 1000.0,
-                    "month_start_equity": 100.0, "current_month": "2026-10"},
+                    "month_start_equity": 100.0, "current_month": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m")},
         "open_positions": [], "pending_orders": [], "closed_trades": [],
         "block_stats": {"consecutive_losses": 0, "blocked": False, "cooldowns": {},
                         "s_min_current": 2.6, "min_rr_current": 3.2, "monthly_dd_pct": 0.0},
@@ -911,7 +912,7 @@ def test_21_bucket_helpers_and_ledger_migration():
     }
     sw.enforce_risk_pct(legacy)
     sw.update_block_stats(legacy)
-    assert legacy["account"]["risk_pct"] == 0.015
+    assert legacy["account"]["risk_pct"] == 0.02
     assert legacy["block_stats"]["min_rr_current"] == 1.8
     assert legacy["block_stats"]["cooldowns"] == []   # {} normalised to []
     print("Test 21 PASS")
@@ -989,7 +990,9 @@ def test_22_profit_lock_ratchet_ladder():
 def test_23_time_profit_harvest():
     entry = 4809.487956466684
     stop = 4585.207969022488
-    last = 4853.7001953125
+    # 2026-11-09: harvest floor raised 0.15R -> 0.50R (5y walk-forward), so the
+    # harvested position must now be at/above 0.5R: last gives ~0.537R.
+    last = 4930.0
     times = ["2026-10-27 00:00:00", "2026-10-28 00:00:00", "2026-10-29 00:00:00", "2026-10-30 00:00:00"]
     df = make_df([entry, entry, last, last],
                  highs=[entry, entry, last * 1.002, last * 1.002],
@@ -1005,11 +1008,23 @@ def test_23_time_profit_harvest():
     assert len(L["open_positions"]) == 0, L["open_positions"]
     tr = L["closed_trades"][0]
     assert tr["reason"] == "TIME_PROFIT_HARVEST", tr["reason"]
-    assert abs(tr["pnl_r"] - 0.1971) < 1e-4, tr["pnl_r"]
+    exp_r = (last - entry) / (entry - stop)
+    assert abs(tr["pnl_r"] - exp_r) < 1e-4, (tr["pnl_r"], exp_r)
     assert tr["bars_held"] == 2, tr["bars_held"]
-    assert abs(L["account"]["equity"] - (100.0 + 0.1971 * 2.0)) < 1e-4, L["account"]["equity"]
+    assert abs(L["account"]["equity"] - (100.0 + exp_r * 2.0)) < 1e-4, L["account"]["equity"]
     assert L["block_stats"]["consecutive_losses"] == 0
     assert abs(tr["exit_price"] - last) < 1e-9
+
+    # below the 0.5R harvest floor the position is NOT banked (2026-11-09 fix)
+    last2 = 4853.7001953125  # ~0.197R, under the new floor
+    df2 = make_df([entry, entry, last2, last2],
+                  highs=[entry, entry, last2 * 1.002, last2 * 1.002],
+                  lows=[entry, entry, last2 * 0.998, last2 * 0.998], times=times)
+    pos_b = dict(pos, order_id="HAL.NS|1d|MA7_TRUE|long|b")
+    Lb = _base_ledger()
+    Lb["open_positions"] = [pos_b]
+    sw.step_a_update_positions(Lb, {("HAL.NS", "1d"): df2})
+    assert len(Lb["open_positions"]) == 1, Lb["closed_trades"]
 
     # wall-clock fallback: ONLY for a missing/empty frame, and it may advance at
     # most one bar per scan (weekends / holidays can never inflate bars_held).
@@ -1328,7 +1343,9 @@ def test_28_historical_inflation_and_target_rr_migration():
     ledger_path = os.path.join(ROOT, "ledger.json")
     with open(ledger_path, encoding="utf-8") as fh:
         live = json.load(fh)
-    assert len(live["pending_orders"]) == 8, len(live["pending_orders"])
+    # Invariants run on whatever is pending right now: the live ledger changes
+    # every scan, so no fixed count or fixed order id may be asserted here.
+    assert isinstance(live["pending_orders"], list)
     for o in live["pending_orders"]:
         assert o["base_score"] <= sw.ARCH_MAX_BASE_SCORE[o["arch"]] + 1e-9, o["order_id"]
         assert abs(o["score"] - min(4.0, o["base_score"] + float(o["kreil"].get("score_boost", 0.0)))) < 1e-9, o["order_id"]
@@ -1341,8 +1358,10 @@ def test_28_historical_inflation_and_target_rr_migration():
             o["symbol"], o["tf"], o["arch"], o["direction"], o["placed_bar_time"],
             o["limit_price"], o["stop_price"], o["target_price"]), o["order_id"]
     by_id = {o["order_id"]: o for o in live["pending_orders"]}
-    assert abs(by_id["XRP-USD|1d|P3_SWEEP|long|2026-10-30 00:00:00"]["base_score"] - 3.4345) < 1e-9
-    assert abs(by_id["XRP-USD|1d|P3_SWEEP|long|2026-10-30 00:00:00"]["score"] - 3.5845) < 1e-9
+    xrp = "XRP-USD|1d|P3_SWEEP|long|2026-10-30 00:00:00"
+    if xrp in by_id:  # historical repair check, only while that order is pending
+        assert abs(by_id[xrp]["base_score"] - 3.4345) < 1e-9
+        assert abs(by_id[xrp]["score"] - 3.5845) < 1e-9
     print("Test 28 PASS")
 
 
