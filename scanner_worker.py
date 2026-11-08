@@ -1964,6 +1964,15 @@ def main():
 
     LEDGER_PATH.write_text(json.dumps(ledger, indent=2, default=str), encoding="utf-8")
 
+    # Pot 1 sleeve: mark to market every scan (weights fixed, monthly rebalance).
+    try:
+        import pot1 as _pot1
+        _prices = _pot1.fetch_prices()
+        ledger["pot1"] = _pot1.sleeve_update(ledger.get("pot1"), _prices, datetime.date.today())
+        LEDGER_PATH.write_text(json.dumps(ledger, indent=2, default=str), encoding="utf-8")
+    except Exception as e:
+        print(f"pot1 update skipped: {e}")
+
     write_status(ledger)
     print(f"done in {time.time()-t0:.1f}s | open={len(open_positions)} pending={len(ledger['pending_orders'])} closed={len(ledger['closed_trades'])}")
 
