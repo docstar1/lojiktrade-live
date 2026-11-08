@@ -3,53 +3,64 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LojikTrade Live Forward Dashboard</title>
+<title>LojikTrade Two-Pot Dashboard</title>
 <style>
-:root{--bg:#0b1220;--card:#121a2b;--accent:#3b82f6;--good:#22c55e;--bad:#ef4444;--warn:#f59e0b;--text:#e5e7eb;--muted:#94a3b8;--border:#1f2937}
+:root{--bg:#0a0f1c;--card:#111827;--card2:#0e1626;--accent:#3b82f6;--teal:#2dd4bf;--good:#22c55e;--bad:#ef4444;--warn:#f59e0b;--text:#e5e7eb;--muted:#94a3b8;--border:#1f2937}
 *{box-sizing:border-box}
 body{margin:0;font-family:Segoe UI,Roboto,system-ui,sans-serif;background:var(--bg);color:var(--text)}
-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
-h1{margin:0;font-size:20px}
+header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+h1{margin:0;font-size:19px}
+.subline{font-size:12px;color:var(--muted);margin-top:3px}
 .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600}
 .badge.live{background:rgba(34,197,94,.15);color:var(--good);border:1px solid var(--good)}
 .badge.offline{background:rgba(239,68,68,.15);color:var(--bad);border:1px solid var(--bad)}
+.badge.plain{background:#1f2937;color:var(--text);border:1px solid var(--border)}
 .dot{width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse 1.2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .container{padding:16px 20px;max-width:1400px;margin:0 auto}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:16px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px}
-.card h3{margin:0 0 6px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-.card .val{font-size:22px;font-weight:700}
-.card .sub{font-size:12px;color:var(--muted);margin-top:4px}
-.progress{height:10px;background:#1f2937;border-radius:999px;overflow:hidden;margin-top:8px}
-.progress>div{height:100%;background:linear-gradient(90deg,var(--accent),var(--good));transition:width .4s}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
 button{background:var(--accent);color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600}
 button.secondary{background:#374151}
-button:disabled{opacity:.5;cursor:not-allowed}
+.pots{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-bottom:16px}
+.pot{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;position:relative}
+.pot .val{font-size:26px;font-weight:700;margin-top:6px}
+.pot .sub{font-size:12px;color:var(--muted);margin-top:4px}
+.pot-tag{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.5px;margin-right:8px;vertical-align:middle}
+.pot1 .pot-tag{background:rgba(45,212,191,.15);color:var(--teal);border:1px solid var(--teal)}
+.pot2 .pot-tag{background:rgba(59,130,246,.15);color:#93c5fd;border:1px solid var(--accent)}
+.pot-title{font-size:14px;font-weight:600}
+.chips{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+.chips span{font-size:11px;padding:3px 8px;border-radius:999px;background:#1f2937;color:var(--muted);border:1px solid var(--border)}
+canvas{width:100%;height:auto;background:var(--card2);border:1px solid var(--border);border-radius:10px;margin-top:10px}
+.progress{height:10px;background:#1f2937;border-radius:999px;overflow:hidden;margin-top:10px}
+.progress>div{height:100%;background:linear-gradient(90deg,var(--accent),var(--good));transition:width .4s}
+.mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:12px}
+.mini div{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:8px 10px}
+.mini .k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.mini .v{font-size:15px;font-weight:700;margin-top:2px}
+.section{margin-bottom:20px}
+.section h2{font-size:15px;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{padding:6px 8px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
 th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--card)}
 .tbl-wrap{max-height:360px;overflow:auto;border:1px solid var(--border);border-radius:10px;background:var(--card)}
-.section{margin-bottom:20px}
-.section h2{font-size:16px;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
-canvas{width:100%;height:220px;background:var(--card);border:1px solid var(--border);border-radius:10px}
 .status-line{font-size:13px;color:var(--muted)}
 .good{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)}
 .mono{font-family:Consolas,monospace;font-size:11px}
 .kreil{display:inline-block;padding:2px 6px;border-radius:999px;font-size:10px;background:rgba(59,130,246,.15);color:#93c5fd;border:1px solid #3b82f6;margin-left:4px;white-space:nowrap}
+footer{padding:14px 20px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);max-width:1400px;margin:0 auto}
 </style>
 </head>
 <body>
 <header>
   <div>
-    <h1>LojikTrade Live Forward Dashboard</h1>
-    <div class="status-line">Online-only browser engine · marks to market every 30s · data: ledger.json</div>
+    <h1>LojikTrade &middot; Two-Pot Dashboard</h1>
+    <div class="subline">Pot 1 income sleeve + Pot 2 NSE-only engine &middot; fresh paper run started Nov 9, 2026 &middot; marks to market every 30s &middot; pot sizes kept private</div>
   </div>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
     <span id="liveBadge" class="badge offline"><span class="dot"></span>Connecting</span>
-    <span class="badge" style="background:#1f2937;color:var(--text);border:1px solid var(--border)">Next tick: <span id="countdown">30</span>s</span>
-    <span class="badge" style="background:#1f2937;color:var(--text);border:1px solid var(--border)">Last live tick: <span id="lastTick">—</span></span>
+    <span class="badge plain">Next tick: <span id="countdown">30</span>s</span>
+    <span class="badge plain">Last live tick: <span id="lastTick">&mdash;</span></span>
   </div>
 </header>
 <div class="container">
@@ -60,51 +71,60 @@ canvas{width:100%;height:220px;background:var(--card);border:1px solid var(--bor
     <span id="errLine" class="status-line bad"></span>
   </div>
 
-  <div class="grid">
-    <div class="card"><h3>Equity</h3><div class="val" id="equity">$0.00</div><div class="sub">Target $1,000.00</div><div class="progress"><div id="eqProgress" style="width:0%"></div></div></div>
-    <div class="card"><h3>Open Positions</h3><div class="val" id="openCount">0</div><div class="sub">Marked to market live</div></div>
-    <div class="card"><h3>Pending Orders</h3><div class="val" id="pendCount">0</div><div class="sub">Resting limits</div></div>
-    <div class="card"><h3>Closed Trades</h3><div class="val" id="closedCount">0</div><div class="sub">Realized</div></div>
-    <div class="card"><h3>Elder 1.5%/6% &amp; Risk Guard</h3><div class="val" id="blockState">OK</div><div class="sub" id="blockSub">Consecutive losses: 0 | s_min: 2.6 | min_rr: 1.8 | monthly DD: 0.0%</div></div>
-    <div class="card"><h3>Risk %</h3><div class="val" id="riskPct">1.5%</div><div class="sub">Per trade &middot; max 3 slots (1 per market bucket)</div></div>
-    <div class="card"><h3>Pot 1 Sleeve</h3><div class="val" id="pot1Nav">&mdash;</div><div class="sub" id="pot1Sub">ETF mix: 50% Nifty &middot; gold &middot; USD &middot; oil &middot; monthly rebalance</div></div>
+  <div class="pots">
+    <div class="pot pot1">
+      <div class="pot-title"><span class="pot-tag">POT 1</span>Income sleeve &middot; Cover constant-mix</div>
+      <div class="val" id="pot1Nav">&mdash;</div>
+      <div class="sub" id="pot1Sub">50% Nifty &middot; gold &middot; USD &middot; oil &middot; rebalanced monthly</div>
+      <div class="chips" id="pot1Weights"><span>Nifty 50%</span><span>Gold 17%</span><span>USD 17%</span><span>Oil 17%</span></div>
+      <div class="sub" id="pot1Start">starting today</div>
+      <canvas id="pot1Canvas" width="640" height="130"></canvas>
+    </div>
+    <div class="pot pot2">
+      <div class="pot-title"><span class="pot-tag">POT 2</span>NSE engine &middot; growth</div>
+      <div class="val" id="equity">$0.00</div>
+      <div class="sub">Target $1,000.00 &middot; <span id="riskPct">3.0%</span> per trade &middot; IndiaNSE pool only &middot; max 3 slots</div>
+      <div class="progress"><div id="eqProgress" style="width:0%"></div></div>
+      <div class="mini">
+        <div><div class="k">Open</div><div class="v" id="openCount">0</div></div>
+        <div><div class="k">Pending</div><div class="v" id="pendCount">0</div></div>
+        <div><div class="k">Closed</div><div class="v" id="closedCount">0</div></div>
+        <div><div class="k">Risk guard</div><div class="v" id="blockState">OK</div></div>
+      </div>
+      <div class="sub" id="blockSub">Consecutive losses: 0 | s_min: 2.9 | min_rr: 2.0 | monthly DD: 0.0%</div>
+    </div>
   </div>
 
   <div class="section">
-    <h2>Equity Curve (live ticks)</h2>
+    <h2>Engine equity curve (live ticks)</h2>
     <canvas id="eqCanvas" width="1200" height="220"></canvas>
   </div>
 
   <div class="section">
     <h2>Open Positions <span class="status-line" id="openSub"></span></h2>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>Symbol</th><th>Market</th><th>TF</th><th>Arch</th><th>Dir</th><th>Entry</th><th>Live</th><th>Stop</th><th>Target</th><th>Unreal R</th><th>Risk$</th><th>Seal</th></tr></thead>
-        <tbody id="openBody"></tbody>
-      </table>
-    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Symbol</th><th>Market</th><th>TF</th><th>Arch</th><th>Dir</th><th>Entry</th><th>Live</th><th>Stop</th><th>Target</th><th>Unreal R</th><th>Risk$</th><th>Seal</th></tr></thead>
+      <tbody id="openBody"></tbody>
+    </table></div>
   </div>
 
   <div class="section">
     <h2>Pending Resting Limit Orders <span class="status-line" id="pendSub"></span></h2>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>Symbol</th><th>Market</th><th>TF</th><th>Arch</th><th>Dir</th><th>Limit</th><th>Live</th><th>Stop</th><th>Target</th><th>Score</th><th>Seal</th></tr></thead>
-        <tbody id="pendBody"></tbody>
-      </table>
-    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Symbol</th><th>Market</th><th>TF</th><th>Arch</th><th>Dir</th><th>Limit</th><th>Live</th><th>Stop</th><th>Target</th><th>Score</th><th>Seal</th></tr></thead>
+      <tbody id="pendBody"></tbody>
+    </table></div>
   </div>
 
   <div class="section">
     <h2>Recent Closed Trades <span class="status-line" id="closedSub"></span></h2>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>Symbol</th><th>Market</th><th>TF</th><th>Arch</th><th>Dir</th><th>Entry</th><th>Exit</th><th>PnL R</th><th>Reason</th></tr></thead>
-        <tbody id="closedBody"></tbody>
-      </table>
-    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Symbol</th><th>Market</th><th>TF</th><th>Arch</th><th>Dir</th><th>Entry</th><th>Exit</th><th>PnL R</th><th>Reason</th></tr></thead>
+      <tbody id="closedBody"></tbody>
+    </table></div>
   </div>
 </div>
+<footer>Two-pot strategy &middot; Pot 2 pool restricted to IndiaNSE on Nov 9, 2026 (cost model: US/crypto/FX legs don't pay costs at this pot size) &middot; all numbers are paper-test units, not rupee amounts &middot; data refreshes from ledger.json on every cloud scan</footer>
 
 <script>
 const LEDGER_LOCAL_URL = 'ledger.json?t=' + Date.now();
@@ -416,6 +436,50 @@ function renderAll(){
   document.getElementById('closedSub').textContent = (ledger.closed_trades||[]).length+' total';
 
   drawEquity();
+  drawPot1();
+}
+
+
+const WEIGHT_LABELS = {'^NSEI':'Nifty 50%','GOLDBEES.NS':'Gold 17%','INR=X':'USD 17%','CL=F':'Oil 17%'};
+
+function drawPot1(){
+  const canvas = document.getElementById('pot1Canvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#0e1626'; ctx.fillRect(0,0,W,H);
+  const p1 = ledger && ledger.pot1;
+  const hist = (p1 && p1.nav_history) ? p1.nav_history : [];
+  const wEl = document.getElementById('pot1Weights');
+  const sEl = document.getElementById('pot1Start');
+  if (p1 && p1.current_weights){
+    wEl.textContent = Object.entries(p1.current_weights)
+      .map(([k,v]) => (WEIGHT_LABELS[k] ? WEIGHT_LABELS[k].split(' ')[0] : k) + ' ' + Math.round(v*100) + '%').join(' \u00b7 ');
+  }
+  if (p1 && p1.start_date) sEl.textContent = 'started ' + p1.start_date + ' \u00b7 next rebalance ' + (p1.next_rebalance || '');
+  if (hist.length < 2){
+    ctx.fillStyle = '#94a3b8'; ctx.font = '12px sans-serif';
+    ctx.fillText('NAV history builds as each scan marks the sleeve to market', 10, H/2);
+    return;
+  }
+  const vals = hist.map(h=>h.nav);
+  const mn = Math.min(...vals), mx = Math.max(...vals);
+  const pad = (mx-mn)*0.15 || 0.001;
+  const lo = mn-pad, hi = mx+pad;
+  const y = v => H-8-((v-lo)/(hi-lo))*(H-16);
+  const x = i => (i/(hist.length-1))*W;
+  if (1.0 >= lo && 1.0 <= hi){
+    ctx.strokeStyle = '#334155'; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(0,y(1)); ctx.lineTo(W,y(1)); ctx.stroke(); ctx.setLineDash([]);
+  }
+  ctx.strokeStyle = '#2dd4bf'; ctx.lineWidth = 2; ctx.beginPath();
+  hist.forEach((h,i)=>{ i===0 ? ctx.moveTo(x(i),y(h.nav)) : ctx.lineTo(x(i),y(h.nav)); });
+  ctx.stroke();
+  const last = hist[hist.length-1];
+  ctx.fillStyle = '#2dd4bf'; ctx.beginPath(); ctx.arc(x(hist.length-1), y(last.nav), 3.5, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#94a3b8'; ctx.font = '11px sans-serif';
+  ctx.fillText(hist[0].date + ' \u2192 ' + last.date + ' \u00b7 NAV ' + Number(last.nav).toFixed(4), 8, 14);
 }
 
 function drawEquity(){
@@ -423,7 +487,7 @@ function drawEquity(){
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0,0,W,H);
-  ctx.fillStyle = '#121a2b'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle = '#0e1626'; ctx.fillRect(0,0,W,H);
   // target line
   const allEq = equitySeries.map(s=>s.equity).concat([100, ledger.account.equity]);
   const minE = Math.min(...allEq, 90);
@@ -502,7 +566,7 @@ async function init(){
     let r;
     try { r = await fetch(LEDGER_LOCAL_URL); if(!r.ok) throw new Error(r.status); }
     catch(e){ r = await fetch(LEDGER_CLOUD_URL); if(!r.ok) throw new Error(r.status); }
-    ledger = await r.json();    if (!ledger.account) ledger.account = {equity:100, risk_pct:0.015, target:1000};
+    ledger = await r.json();    if (!ledger.account) ledger.account = {equity:100, risk_pct:0.03, target:1000};
     if (!ledger.open_positions) ledger.open_positions=[];
     if (!ledger.pending_orders) ledger.pending_orders=[];
     if (!ledger.closed_trades) ledger.closed_trades=[];

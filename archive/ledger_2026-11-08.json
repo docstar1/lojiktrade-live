@@ -1,0 +1,747 @@
+{
+  "account": {
+    "equity": 96.15640235103028,
+    "risk_pct": 0.03,
+    "target": 1000.0,
+    "month_start_equity": 100.7884,
+    "current_month": "2026-11"
+  },
+  "open_positions": [
+    {
+      "order_id": "SBIN.NS|1d|P3_SWEEP|short|2026-11-03 00:00:00",
+      "symbol": "SBIN.NS",
+      "market": "IndiaNSE",
+      "tf": "1d",
+      "arch": "P3_SWEEP",
+      "direction": "short",
+      "entry_time": "2026-11-04 00:00:00",
+      "opened_at": "2026-11-04 00:00:00",
+      "entry_price": 987.75,
+      "stop_price": 1011.6294555664062,
+      "initial_stop": 1011.6294555664062,
+      "initial_stop_price": 1011.6294555664062,
+      "target_price": 937.6031433105469,
+      "risk_capital": 1.4679632747412517,
+      "unrealized_r": 0.3664237643805225,
+      "mfe_r": 0.0,
+      "bars_held": 1,
+      "last_processed_bar_ts": "2026-11-05 00:00:00",
+      "seal_sha256": "e0b7c5a207ca26ef388f8c1bbd05fcb4eef22ec7e67037afba8736abd7fcf5f5",
+      "last_price": 979.0,
+      "kreil": {
+        "atr_1d": 0.032842779918275104,
+        "atr_5": 0.023601017891813236,
+        "atr_20": 0.020658351688680847,
+        "atr_60": 0.017661899779802905,
+        "atr_250": 0.018972064654623682,
+        "atr_5_250": 1.2439878485266196,
+        "atr_1_20": 1.589806409204969,
+        "mean": -0.00037488461290770476,
+        "std": 0.012324621195895929,
+        "skew": -0.6343288534631271,
+        "excess_kurt": 2.4715831399969472,
+        "passed": true,
+        "reason": null,
+        "score_boost": 0.15,
+        "direction": "SHORT",
+        "arch": "P3_SWEEP"
+      }
+    },
+    {
+      "order_id": "XLE|1d|P3_SWEEP|long|2026-11-04 00:00:00",
+      "symbol": "XLE",
+      "market": "US",
+      "tf": "1d",
+      "arch": "P3_SWEEP",
+      "direction": "long",
+      "entry_time": "2026-11-05 00:00:00",
+      "opened_at": "2026-11-05 00:00:00",
+      "entry_price": 63.040000915527344,
+      "stop_price": 62.22732128415789,
+      "initial_stop": 62.22732128415789,
+      "initial_stop_price": 62.22732128415789,
+      "target_price": 64.7466281414032,
+      "risk_capital": 1.4423460352654542,
+      "unrealized_r": -1.7350008453344683,
+      "mfe_r": 0.0,
+      "bars_held": 0,
+      "last_processed_bar_ts": "2026-11-05 00:00:00",
+      "seal_sha256": "a7ffa28d5b0604e4360c383c8b03fcae1cd4453c993f04f27747cb7a87e4ec11",
+      "last_price": 61.630001068115234,
+      "kreil": {
+        "atr_1d": 0.04830032714911773,
+        "atr_5": 0.02770769621508006,
+        "atr_20": 0.021131457637806626,
+        "atr_60": 0.018477681518239208,
+        "atr_250": 0.018879614411864885,
+        "atr_5_250": 1.4675986283738491,
+        "atr_1_20": 2.2857073078907177,
+        "mean": 0.000844912027978566,
+        "std": 0.01171245874193296,
+        "skew": -0.2208752313858678,
+        "excess_kurt": 0.45292497036416357,
+        "passed": true,
+        "reason": null,
+        "score_boost": 0.0,
+        "direction": "LONG",
+        "arch": "P3_SWEEP"
+      }
+    }
+  ],
+  "pending_orders": [
+    {
+      "order_id": "SBIN.NS|1d|P3_SWEEP|short|2026-11-05 00:00:00",
+      "symbol": "SBIN.NS",
+      "market": "IndiaNSE",
+      "tf": "1d",
+      "arch": "P3_SWEEP",
+      "direction": "short",
+      "placed_bar_time": "2026-11-05 00:00:00",
+      "limit_price": 1006.5499877929688,
+      "stop_price": 1015.0776574271066,
+      "target_price": 988.6418815612792,
+      "score": 3.497,
+      "delta": 0.00847217697834979,
+      "rr": 2.1,
+      "seal_sha256": "3b22e7bab9a64155622e42e26ba497e543f597a1457fa1fb4df28f2c0bbdb25c",
+      "base_score": 3.347,
+      "kreil": {
+        "atr_1d": 0.03332991571502271,
+        "atr_5": 0.023698445051162757,
+        "atr_20": 0.020682708478518226,
+        "atr_60": 0.017670018709748696,
+        "atr_250": 0.018974013197810672,
+        "atr_5_250": 1.2489948649291134,
+        "atr_1_20": 1.6114869940578773,
+        "mean": -0.00037467955580906744,
+        "std": 0.012324693550451515,
+        "skew": -0.6343613806188384,
+        "excess_kurt": 2.471499793173204,
+        "passed": true,
+        "reason": null,
+        "score_boost": 0.15,
+        "direction": "SHORT",
+        "arch": "P3_SWEEP",
+        "boost_applied": true
+      },
+      "last_price": 979.0
+    },
+    {
+      "order_id": "BEL.NS|1d|P3_SWEEP|short|2026-11-05 00:00:00",
+      "symbol": "BEL.NS",
+      "market": "IndiaNSE",
+      "tf": "1d",
+      "arch": "P3_SWEEP",
+      "direction": "short",
+      "placed_bar_time": "2026-11-05 00:00:00",
+      "limit_price": 399.1499938964844,
+      "stop_price": 406.8571434020996,
+      "target_price": 382.9649799346924,
+      "score": 3.2432,
+      "delta": 0.019308905482819595,
+      "rr": 2.1,
+      "seal_sha256": "1c2f57f202e9eaecaec5b7af0543b2273d7e165bad598f3a405ff8dc6684674f",
+      "base_score": 3.2432,
+      "kreil": {
+        "atr_1d": 0.03620060860953713,
+        "atr_5": 0.024244570037822634,
+        "atr_20": 0.02237542036624516,
+        "atr_60": 0.018682136110207245,
+        "atr_250": 0.02169948930698486,
+        "atr_5_250": 1.1172875865801384,
+        "atr_1_20": 1.6178738998865114,
+        "mean": -0.0010755209841904552,
+        "std": 0.014957715213136331,
+        "skew": 0.502918950875804,
+        "excess_kurt": 4.429160945832657,
+        "passed": true,
+        "reason": null,
+        "score_boost": 0.0,
+        "direction": "SHORT",
+        "arch": "P3_SWEEP"
+      },
+      "last_price": 398.0
+    },
+    {
+      "order_id": "AVGO|1d|F3_BREAKOUT|short|2026-11-05 00:00:00",
+      "symbol": "AVGO",
+      "market": "US",
+      "tf": "1d",
+      "arch": "F3_BREAKOUT",
+      "direction": "short",
+      "placed_bar_time": "2026-11-05 00:00:00",
+      "limit_price": 321.6902940201735,
+      "stop_price": 353.8400656563895,
+      "target_price": 250.96079642049824,
+      "score": 3.0871,
+      "delta": 0.09994013569523452,
+      "rr": 2.2,
+      "seal_sha256": "bc7efda4d683e761ec352e354794e9ed9c6ed41b492d4da2fe9efc657f5ba574",
+      "base_score": 3.0871,
+      "kreil": {
+        "atr_1d": 0.05812948164835814,
+        "atr_5": 0.0380196378636415,
+        "atr_20": 0.029141234653090264,
+        "atr_60": 0.026935615942372534,
+        "atr_250": 0.03460838600202812,
+        "atr_5_250": 1.09856720453284,
+        "atr_1_20": 1.994750131226641,
+        "mean": -0.0017721960736956984,
+        "std": 0.02136262190375805,
+        "skew": 0.11998169975658059,
+        "excess_kurt": 1.295735392148769,
+        "passed": true,
+        "reason": null,
+        "score_boost": 0.0,
+        "direction": "SHORT",
+        "arch": "F3_BREAKOUT"
+      },
+      "last_price": 291.5299987792969
+    },
+    {
+      "order_id": "BAJFINANCE.NS|1d|F3_BREAKOUT|long|2026-11-05 00:00:00",
+      "symbol": "BAJFINANCE.NS",
+      "market": "IndiaNSE",
+      "tf": "1d",
+      "arch": "F3_BREAKOUT",
+      "direction": "long",
+      "placed_bar_time": "2026-11-05 00:00:00",
+      "limit_price": 985.5107710465392,
+      "stop_price": 896.0764535086496,
+      "target_price": 1182.2662696298962,
+      "score": 3.0004,
+      "delta": 0.0907492035251091,
+      "rr": 2.2,
+      "seal_sha256": "fa165aec4aefbec08c76454c9665583210019d1e83f0d2a8ed9908ecd38acb28",
+      "base_score": 3.0004,
+      "kreil": {
+        "atr_1d": 0.02520663679138688,
+        "atr_5": 0.025048045546190757,
+        "atr_20": 0.027782571901649306,
+        "atr_60": 0.021890987415092326,
+        "atr_250": 0.02337988739489302,
+        "atr_5_250": 1.0713501362569489,
+        "atr_1_20": 0.907282338028989,
+        "mean": 0.0005573091458139064,
+        "std": 0.015197378259979324,
+        "skew": -0.033386804421493055,
+        "excess_kurt": 0.5524686713670497,
+        "passed": true,
+        "reason": null,
+        "score_boost": 0.0,
+        "direction": "LONG",
+        "arch": "F3_BREAKOUT"
+      },
+      "last_price": 994.0
+    },
+    {
+      "order_id": "HAL.NS|1d|F3_BREAKOUT|long|2026-11-04 00:00:00",
+      "symbol": "HAL.NS",
+      "market": "IndiaNSE",
+      "tf": "1d",
+      "arch": "F3_BREAKOUT",
+      "direction": "long",
+      "placed_bar_time": "2026-11-04 00:00:00",
+      "limit_price": 4961.481007940649,
+      "stop_price": 4629.746428571429,
+      "target_price": 5691.297082552934,
+      "score": 2.9952,
+      "delta": 0.06686200729949233,
+      "rr": 2.2,
+      "seal_sha256": "1682715f4c2d757601c5336c445d2164455748d6cc96e00281102ea5d7a43700",
+      "base_score": 2.9952,
+      "kreil": {
+        "atr_1d": 0.03169569513206544,
+        "atr_5": 0.0217210469045308,
+        "atr_20": 0.02466182514698099,
+        "atr_60": 0.022351134879570005,
+        "atr_250": 0.023678852568416283,
+        "atr_5_250": 0.9173183895533487,
+        "atr_1_20": 1.2852128722494616,
+        "mean": -9.163631982667276e-05,
+        "std": 0.015727910852063976,
+        "skew": 0.10189404890098719,
+        "excess_kurt": 1.2757514475696876,
+        "passed": true,
+        "reason": null,
+        "score_boost": 0.0,
+        "direction": "LONG",
+        "arch": "F3_BREAKOUT"
+      },
+      "last_price": 5079.10009765625
+    },
+    {
+      "order_id": "COIN|1d|F3_BREAKOUT|short|2026-10-30 00:00:00",
+      "symbol": "COIN",
+      "market": "US",
+      "tf": "1d",
+      "arch": "F3_BREAKOUT",
+      "direction": "short",
+      "placed_bar_time": "2026-10-30 00:00:00",
+      "limit_price": 158.32261684468565,
+      "stop_price": 184.43263669695173,
+      "target_price": 100.88057316970028,
+      "score": 2.9638,
+      "delta": 0.16491655060173735,
+      "rr": 2.2,
+      "seal_sha256": "25422108eb6c996e0fa64ea284f938cb4ff3bbf427226951e79712e3966a2a83",
+      "base_score": 2.9638,
+      "kreil": {
+        "atr_1d": 0.0992115703247693,
+        "atr_5": 0.07802531950329378,
+        "atr_20": 0.05859278475734451,
+        "atr_60": 0.055522910660617666,
+        "atr_250": 0.055163999728123865,
+        "atr_5_250": 1.4144246227221027,
+        "atr_1_20": 1.6932386937341,
+        "mean": -0.0002639572047891139,
+        "std": 0.035730560555603565,
+        "skew": 0.2251395875828315,
+        "excess_kurt": 0.04540159568248603,
+        "passed": true,
+        "reason": null,
+        "score_boost": 0.0,
+        "direction": "SHORT",
+        "arch": "F3_BREAKOUT"
+      },
+      "last_price": 136.82000732421875
+    },
+    {
+      "order_id": "GC=F|1d|MA7_TRUE|short|2026-11-05 00:00:00",
+      "symbol": "GC=F",
+      "market": "FXCommod",
+      "tf": "1d",
+      "arch": "MA7_TRUE",
+      "direction": "short",
+      "placed_bar_time": "2026-11-05 00:00:00",
+      "limit_price": 4124.643571900077,
+      "stop_price": 4274.326359986015,
+      "target_price": 3825.2779957282028,
+      "score": 2.95,
+      "delta": 0.036289872197849994,
+      "rr": 2.0,
+      "seal_sha256": "1f9e176e51a9e305fd13191c06ebfd1be1b233a44bfdc3ecdab8a4fae4a7346d",
+      "base_score": 2.8,
+      "kreil": {
+        "atr_1d": 0.03067902477815437,
+        "atr_5": 0.02827015337246876,
+        "atr_20": 0.019149682984219353,
+        "atr_60": 0.02154660324482766,
+        "atr_250": 0.025826622341913377,
+        "atr_5_250": 1.0946128765196617,
+        "atr_1_20": 1.6020643685556561,
+        "mean": 0.00018548734788473238,
+        "std": 0.01716677711650566,
+        "skew": -1.5060895510091015,
+        "excess_kurt": 9.994670037723111,
+        "passed": true,
+        "reason": null,
+        "score_boost": 0.15,
+        "direction": "SHORT",
+        "arch": "MA7_TRUE",
+        "boost_applied": true
+      },
+      "last_price": 4100.60009765625
+    },
+    {
+      "order_id": "EURUSD=X|1d|MA7_TRUE|short|2026-11-05 00:00:00",
+      "symbol": "EURUSD=X",
+      "market": "FXCommod",
+      "tf": "1d",
+      "arch": "MA7_TRUE",
+      "direction": "short",
+      "placed_bar_time": "2026-11-05 00:00:00",
+      "limit_price": 1.1253386019174345,
+      "stop_price": 1.1362998398929638,
+      "target_price": 1.103416125966376,
+      "score": 2.95,
+      "delta": 0.00974039098707955,
+      "rr": 2.0,
+      "seal_sha256": "760a8e040bb07f9651ed8879db32d80977d73edfd66e0a42f190819475532642",
+      "base_score": 2.8,
+      "kreil": {
+        "atr_1d": 0.006200757612738829,
+        "atr_5": 0.005834612692038002,
+        "atr_20": 0.004994407045437112,
+        "atr_60": 0.004428357999391287,
+        "atr_250": 0.004624781576918492,
+        "atr_5_250": 1.2615974603336024,
+        "atr_1_20": 1.2415402982429793,
+        "mean": -5.1131364313829494e-06,
+        "std": 0.00015998516665021473,
+        "skew": -1.2033828116466838,
+        "excess_kurt": 9.293031516116688,
+        "passed": true,
+        "reason": null,
+        "score_boost": 0.15,
+        "direction": "SHORT",
+        "arch": "MA7_TRUE",
+        "boost_applied": true
+      },
+      "last_price": 1.1220825910568237
+    }
+  ],
+  "block_stats": {
+    "consecutive_losses": 2,
+    "blocked": false,
+    "cooldowns": [
+      {
+        "symbol": "AMD",
+        "direction": "long",
+        "tf": "1d",
+        "until": "2026-11-05 00:00:00+00:00"
+      },
+      {
+        "symbol": "INFY.NS",
+        "direction": "long",
+        "tf": "1h",
+        "until": "2026-11-04 09:45:00+00:00"
+      },
+      {
+        "symbol": "ETH-USD",
+        "direction": "short",
+        "tf": "1h",
+        "until": "2026-11-04 12:00:00+00:00"
+      }
+    ],
+    "s_min_current": 2.9,
+    "min_rr_current": 2.0,
+    "monthly_dd_pct": 0.045957646405436696,
+    "min_rr": 1.8,
+    "loss_block_expired_at": "2026-11-04 19:56:59.292330+00:00"
+  },
+  "last_run": "2026-11-05T21:34:52.778727+00:00",
+  "spot_prices": {
+    "ICICIBANK.NS": {
+      "price": 1500.0,
+      "ts": "2026-11-05 15:15:00+05:30",
+      "tf": "1h"
+    },
+    "HDFCBANK.NS": {
+      "price": 760.0,
+      "ts": "2026-11-05 15:15:00+05:30",
+      "tf": "1h"
+    },
+    "RELIANCE.NS": {
+      "price": 1313.4000244140625,
+      "ts": "2026-11-05 15:15:00+05:30",
+      "tf": "1h"
+    },
+    "SBIN.NS": {
+      "price": 1006.4000244140625,
+      "ts": "2026-11-05 15:15:00+05:30",
+      "tf": "1h"
+    },
+    "INFY.NS": {
+      "price": 1167.4000244140625,
+      "ts": "2026-11-05 15:15:00+05:30",
+      "tf": "1h"
+    },
+    "TCS.NS": {
+      "price": 2495.699951171875,
+      "ts": "2026-11-05 15:15:00+05:30",
+      "tf": "1h"
+    },
+    "BAJFINANCE.NS": {
+      "price": 1070.0,
+      "ts": "2026-11-05 15:15:00+05:30",
+      "tf": "1h"
+    },
+    "LT.NS": {
+      "price": 4050.0,
+      "ts": "2026-11-05 15:15:00+05:30",
+      "tf": "1h"
+    },
+    "M&M.NS": {
+      "price": 3127.5,
+      "ts": "2026-11-05 15:15:00+05:30",
+      "tf": "1h"
+    },
+    "HAL.NS": {
+      "price": 5043.0,
+      "ts": "2026-11-05 15:15:00+05:30",
+      "tf": "1h"
+    },
+    "BEL.NS": {
+      "price": 395.1000061035156,
+      "ts": "2026-11-05 15:15:00+05:30",
+      "tf": "1h"
+    },
+    "TRENT.NS": {
+      "price": 3055.0,
+      "ts": "2026-11-05 15:15:00+05:30",
+      "tf": "1h"
+    },
+    "MARUTI.NS": {
+      "price": 12652.0,
+      "ts": "2026-11-05 15:15:00+05:30",
+      "tf": "1h"
+    },
+    "NVDA": {
+      "price": 181.59500122070312,
+      "ts": "2026-11-05 15:45:00-05:00",
+      "tf": "15m"
+    },
+    "PNB.NS": {
+      "price": 126.0999984741211,
+      "ts": "2026-11-05 15:15:00+05:30",
+      "tf": "1h"
+    },
+    "TSLA": {
+      "price": 343.57000732421875,
+      "ts": "2026-11-05 15:45:00-05:00",
+      "tf": "15m"
+    },
+    "AMD": {
+      "price": 402.510009765625,
+      "ts": "2026-11-05 15:45:00-05:00",
+      "tf": "15m"
+    },
+    "META": {
+      "price": 605.6699829101562,
+      "ts": "2026-11-05 15:45:00-05:00",
+      "tf": "15m"
+    },
+    "AMZN": {
+      "price": 260.510009765625,
+      "ts": "2026-11-05 15:45:00-05:00",
+      "tf": "15m"
+    },
+    "AVGO": {
+      "price": 291.3800048828125,
+      "ts": "2026-11-05 15:45:00-05:00",
+      "tf": "15m"
+    },
+    "AMAT": {
+      "price": 319.3299865722656,
+      "ts": "2026-11-05 15:45:00-05:00",
+      "tf": "15m"
+    },
+    "PLTR": {
+      "price": 154.85000610351562,
+      "ts": "2026-11-05 15:45:00-05:00",
+      "tf": "15m"
+    },
+    "COIN": {
+      "price": 136.83999633789062,
+      "ts": "2026-11-05 15:45:00-05:00",
+      "tf": "15m"
+    },
+    "QQQ": {
+      "price": 648.0599975585938,
+      "ts": "2026-11-05 15:45:00-05:00",
+      "tf": "15m"
+    },
+    "SPY": {
+      "price": 733.1300048828125,
+      "ts": "2026-11-05 15:45:00-05:00",
+      "tf": "15m"
+    },
+    "XLE": {
+      "price": 61.68000030517578,
+      "ts": "2026-11-05 15:45:00-05:00",
+      "tf": "15m"
+    },
+    "BTC-USD": {
+      "price": 75969.0390625,
+      "ts": "2026-11-05 21:30:00+00:00",
+      "tf": "15m"
+    },
+    "ETH-USD": {
+      "price": 2233.570068359375,
+      "ts": "2026-11-05 21:30:00+00:00",
+      "tf": "15m"
+    },
+    "SOL-USD": {
+      "price": 89.94000244140625,
+      "ts": "2026-11-05 21:30:00+00:00",
+      "tf": "15m"
+    },
+    "XRP-USD": {
+      "price": 1.2242000102996826,
+      "ts": "2026-11-05 21:30:00+00:00",
+      "tf": "15m"
+    },
+    "DOGE-USD": {
+      "price": 0.0720599964261055,
+      "ts": "2026-11-05 21:30:00+00:00",
+      "tf": "15m"
+    },
+    "LTC-USD": {
+      "price": 52.137001037597656,
+      "ts": "2026-11-05 21:30:00+00:00",
+      "tf": "15m"
+    },
+    "NEAR-USD": {
+      "price": 3.711899995803833,
+      "ts": "2026-11-05 21:30:00+00:00",
+      "tf": "15m"
+    },
+    "TRX-USD": {
+      "price": 0.3181467354297638,
+      "ts": "2026-11-05 21:30:00+00:00",
+      "tf": "15m"
+    },
+    "GC=F": {
+      "price": 4100.60009765625,
+      "ts": "2026-11-05 16:00:00-05:00",
+      "tf": "1h"
+    },
+    "SI=F": {
+      "price": 51.845001220703125,
+      "ts": "2026-11-05 16:00:00-05:00",
+      "tf": "1h"
+    },
+    "CL=F": {
+      "price": 90.87000274658203,
+      "ts": "2026-11-05 16:00:00-05:00",
+      "tf": "1h"
+    },
+    "EURUSD=X": {
+      "price": 1.1220825910568237,
+      "ts": "2026-11-05 21:00:00+00:00",
+      "tf": "1h"
+    },
+    "GBPUSD=X": {
+      "price": 1.344881296157837,
+      "ts": "2026-11-05 21:00:00+00:00",
+      "tf": "1h"
+    },
+    "USDJPY=X": {
+      "price": 157.70899963378906,
+      "ts": "2026-11-05 21:00:00+00:00",
+      "tf": "1h"
+    }
+  },
+  "closed_trades": [
+    {
+      "order_id": "HAL.NS|1d|MA7_TRUE|long|2026-10-27 00:00:00",
+      "symbol": "HAL.NS",
+      "market": "IndiaNSE",
+      "tf": "1d",
+      "arch": "MA7_TRUE",
+      "direction": "long",
+      "entry_time": "2026-10-28 00:00:00",
+      "exit_time": "2026-10-30 00:00:00",
+      "entry_price": 4809.487956466684,
+      "exit_price": 4853.7001953125,
+      "pnl_r": 0.1971,
+      "realized_r": 0.1971,
+      "mfe_r": 0.2694,
+      "bars_held": 2,
+      "reason": "TIME_PROFIT_HARVEST",
+      "cooldown_until": "2026-11-01 00:00:00+00:00"
+    },
+    {
+      "order_id": "XRP-USD|1d|P3_SWEEP|long|2026-10-30 00:00:00",
+      "symbol": "XRP-USD",
+      "market": "Crypto",
+      "tf": "1d",
+      "arch": "P3_SWEEP",
+      "direction": "long",
+      "entry_time": "2026-10-31 00:00:00",
+      "exit_time": "2026-11-03 00:00:00",
+      "entry_price": 1.256762981414795,
+      "exit_price": 1.2799999713897705,
+      "pnl_r": 0.3569,
+      "realized_r": 0.3569,
+      "mfe_r": 0.0,
+      "bars_held": 3,
+      "reason": "TIME_PROFIT_HARVEST",
+      "cooldown_until": "2026-11-05 00:00:00+00:00"
+    },
+    {
+      "order_id": "AMD|1d|P3_SWEEP|long|2026-10-30 00:00:00",
+      "symbol": "AMD",
+      "market": "US",
+      "tf": "1d",
+      "arch": "P3_SWEEP",
+      "direction": "long",
+      "entry_time": "2026-11-02 00:00:00",
+      "exit_time": "2026-11-03 00:00:00",
+      "entry_price": 502.6000061035156,
+      "exit_price": 480.0299987792969,
+      "pnl_r": -1.2486,
+      "realized_r": -1.2486,
+      "mfe_r": 0.0,
+      "bars_held": 1,
+      "reason": "stop",
+      "cooldown_until": "2026-11-05 00:00:00+00:00"
+    },
+    {
+      "order_id": "INFY.NS|1h|F3_BREAKOUT|long|2026-10-30 15:15:00+05:30",
+      "symbol": "INFY.NS",
+      "market": "IndiaNSE",
+      "tf": "1h",
+      "arch": "F3_BREAKOUT",
+      "direction": "long",
+      "entry_time": "2026-11-02 09:15:00+05:30",
+      "exit_time": "2026-11-04 09:15:00+05:30",
+      "entry_price": 1176.4925838655354,
+      "exit_price": 1132.2103332519532,
+      "pnl_r": -1.0425,
+      "realized_r": -1.0425,
+      "mfe_r": 0.0,
+      "bars_held": 14,
+      "reason": "stop",
+      "cooldown_until": "2026-11-04 09:45:00+00:00"
+    },
+    {
+      "order_id": "ETH-USD|1h|MA7_TRUE|short|2026-11-04 04:00:00+00:00",
+      "symbol": "ETH-USD",
+      "market": "Crypto",
+      "tf": "1h",
+      "arch": "MA7_TRUE",
+      "direction": "short",
+      "entry_time": "2026-11-04 05:00:00+00:00",
+      "exit_time": "2026-11-04 06:00:00+00:00",
+      "entry_price": 2269.5905650423456,
+      "exit_price": 2295.98252932806,
+      "pnl_r": -1.1634,
+      "realized_r": -1.1634,
+      "mfe_r": 0.0,
+      "bars_held": 7,
+      "reason": "stop",
+      "cooldown_until": "2026-11-04 12:00:00+00:00"
+    }
+  ],
+  "pot1": {
+    "start_date": "2026-11-08",
+    "target_weights": {
+      "^NSEI": 0.5,
+      "GOLDBEES.NS": 0.16666666666666666,
+      "INR=X": 0.16666666666666666,
+      "CL=F": 0.16666666666666666
+    },
+    "units": {
+      "^NSEI": 2.0010885609101264e-05,
+      "GOLDBEES.NS": 0.0014295108662980684,
+      "INR=X": 0.0017750324578021486,
+      "CL=F": 0.0018349296852010356
+    },
+    "nav": 1.0,
+    "total_return_pct": -0.0,
+    "last_rebalance": "2026-11-08",
+    "next_rebalance": "2026-12-01",
+    "nav_history": [
+      {
+        "date": "2026-11-08",
+        "nav": 1.0
+      }
+    ],
+    "current_weights": {
+      "^NSEI": 0.5,
+      "GOLDBEES.NS": 0.1667,
+      "INR=X": 0.1667,
+      "CL=F": 0.1667
+    },
+    "prices": {
+      "^NSEI": 24986.400390625,
+      "GOLDBEES.NS": 116.58999633789062,
+      "INR=X": 93.8949966430664,
+      "CL=F": 90.83000183105469
+    },
+    "last_updated": "2026-11-08",
+    "rebalanced_today": false
+  }
+}
