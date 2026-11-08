@@ -22,6 +22,9 @@ h1{margin:0;font-size:19px}
 button{background:var(--accent);color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600}
 button.secondary{background:#374151}
 .pots{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-bottom:16px}
+.how .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.how .step{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.5}
+.how .step .k{color:var(--teal);font-weight:700;font-size:11px;letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px}
 .pot{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;position:relative}
 .pot .val{font-size:26px;font-weight:700;margin-top:6px}
 .pot .sub{font-size:12px;color:var(--muted);margin-top:4px}
@@ -55,7 +58,7 @@ footer{padding:14px 20px;border-top:1px solid var(--border);font-size:12px;color
 <header>
   <div>
     <h1>LojikTrade &middot; Two-Pot Dashboard</h1>
-    <div class="subline">Pot 1 income sleeve + Pot 2 NSE-only engine &middot; fresh paper run started Nov 9, 2026 &middot; marks to market every 30s &middot; pot sizes kept private</div>
+    <div class="subline">Pot 1 pays the draw, Pot 2 grows the corpus &middot; target Rs 1,000/month &middot; paper run started Nov 9, 2026 &middot; marks to market every 30s</div>
   </div>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
     <span id="liveBadge" class="badge offline"><span class="dot"></span>Connecting</span>
@@ -71,17 +74,26 @@ footer{padding:14px 20px;border-top:1px solid var(--border);font-size:12px;color
     <span id="errLine" class="status-line bad"></span>
   </div>
 
+  <div class="section how">
+    <h2>How this works</h2>
+    <div class="steps">
+      <div class="step"><div class="k">1 &middot; Now &middot; paper run</div><div>Both pots run on fake money for two weeks (started Nov 9, 2026), so the live engine proves itself before any real rupee moves.</div></div>
+      <div class="step"><div class="k">2 &middot; Then &middot; funding</div><div>Rs 50,000 goes into each pot. Pot 1 buys the income sleeve below; Pot 2 runs the trading engine.</div></div>
+      <div class="step"><div class="k">3 &middot; The monthly draw</div><div>Target: <b>Rs 1,000/month income</b>. Pot 1 pays it (tested ~Rs 437/month per Rs 50k at +10.9%/yr); Pot 2 trades NSE stocks at <b>3% risk per trade</b> to grow the corpus and tops up Pot 1.</div></div>
+    </div>
+  </div>
+
   <div class="pots">
     <div class="pot pot1">
-      <div class="pot-title"><span class="pot-tag">POT 1</span>Income sleeve &middot; Cover constant-mix</div>
+      <div class="pot-title"><span class="pot-tag">POT 1</span>Income pot &middot; pays the monthly draw</div>
       <div class="val" id="pot1Nav">&mdash;</div>
-      <div class="sub" id="pot1Sub">50% Nifty &middot; gold &middot; USD &middot; oil &middot; rebalanced monthly</div>
-      <div class="chips" id="pot1Weights"><span>Nifty 50%</span><span>Gold 17%</span><span>USD 17%</span><span>Oil 17%</span></div>
+      <div class="sub" id="pot1Sub">50% Nifty &middot; 25% gold &middot; 25% S&amp;P 500 in rupees &middot; rebalanced monthly</div>
+      <div class="chips" id="pot1Weights"><span>Nifty 50%</span><span>Gold 25%</span><span>S&amp;P 500 25%</span></div>
       <div class="sub" id="pot1Start">starting today</div>
       <canvas id="pot1Canvas" width="640" height="130"></canvas>
     </div>
     <div class="pot pot2">
-      <div class="pot-title"><span class="pot-tag">POT 2</span>NSE engine &middot; growth</div>
+      <div class="pot-title"><span class="pot-tag">POT 2</span>Growth pot &middot; LojikTrade engine</div>
       <div class="val" id="equity">$0.00</div>
       <div class="sub">Target $1,000.00 &middot; <span id="riskPct">3.0%</span> per trade &middot; IndiaNSE pool only &middot; max 3 slots</div>
       <div class="progress"><div id="eqProgress" style="width:0%"></div></div>
@@ -124,7 +136,7 @@ footer{padding:14px 20px;border-top:1px solid var(--border);font-size:12px;color
     </table></div>
   </div>
 </div>
-<footer>Two-pot strategy &middot; Pot 2 pool restricted to IndiaNSE on Nov 9, 2026 (cost model: US/crypto/FX legs don't pay costs at this pot size) &middot; all numbers are paper-test units, not rupee amounts &middot; data refreshes from ledger.json on every cloud scan</footer>
+<footer>Two pots, one plan &middot; Rs 1,000/month draw target &middot; Pot 2 trades NSE stocks only (US/crypto/FX legs don't pay their costs at this pot size) &middot; figures are paper-test units until the Rs 50k funding &middot; data refreshes from ledger.json on every cloud scan</footer>
 
 <script>
 const LEDGER_LOCAL_URL = 'ledger.json?t=' + Date.now();
@@ -385,8 +397,8 @@ function renderAll(){
   document.getElementById('riskPct').textContent = (acct.risk_pct*100).toFixed(1)+'%';
   const p1 = ledger.pot1;
   if (p1) {
-    document.getElementById('pot1Nav').textContent = (p1.total_return_pct>=0?'+':'') + Number(p1.total_return_pct).toFixed(2) + '%';
-    document.getElementById('pot1Sub').textContent = 'Sleeve NAV ' + Number(p1.nav).toFixed(4) + ' &middot; next rebalance ' + p1.next_rebalance;
+    document.getElementById('pot1Nav').textContent = 'NAV ' + Number(p1.nav).toFixed(4);
+    document.getElementById('pot1Sub').textContent = (p1.total_return_pct>=0?'+':'') + Number(p1.total_return_pct).toFixed(2) + '% since start &middot; next rebalance ' + p1.next_rebalance;
   }
   const pct = Math.min(100, Math.max(0, (acct.equity-100)/(1000-100)*100));
   document.getElementById('eqProgress').style.width = pct+'%';
@@ -440,7 +452,7 @@ function renderAll(){
 }
 
 
-const WEIGHT_LABELS = {'^NSEI':'Nifty 50%','GOLDBEES.NS':'Gold 17%','INR=X':'USD 17%','CL=F':'Oil 17%'};
+const WEIGHT_LABELS = {'^NSEI':'Nifty','GOLDBEES.NS':'Gold','SPX_INR':'S&P 500'};
 
 function drawPot1(){
   const canvas = document.getElementById('pot1Canvas');

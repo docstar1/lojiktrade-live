@@ -1,8 +1,11 @@
-"""Pot 1 - Cover constant-mix sleeve tracker (the income pot).
+"""Pot 1 - income pot sleeve tracker (the draw-paying pot).
 
-Paper valuation of the tested sleeve: 50% Nifty, 1/6 gold (INR), 1/6 USDINR,
-1/6 oil. Monthly rebalance back to target weights on the first trading day of
-each month. NAV starts at 1.0 on start_date.
+Fully-buyable 3-leg sleeve, tested in lojiktrade research/sleeve3.py on the
+same 5y window as the old 4-leg (beats it: crude was a net drag): 50% Nifty
+ETF + 25% gold ETF + 25% S&P 500 held in rupees via an Indian index
+fund-of-fund (leg valued as ^GSPC x USDINR). No USD leg, no oil. Monthly
+rebalance back to target weights on the first trading day of each month.
+NAV starts at 1.0 on start_date.
 
 Pot sizes are deliberately kept OUT of this public repo (see
 LIVE_FORWARD_STATUS.md). The Nifty leg is valued on the index (^NSEI) exactly
@@ -19,8 +22,10 @@ import yfinance as yf
 
 LEDGER_PATH = "ledger.json"
 
-# Tested in research/cover_test.py: ~+12.8-13.1%/yr, maxDD ~-8%.
-TARGET_WEIGHTS = {"^NSEI": 0.5, "GOLDBEES.NS": 1 / 6.0, "INR=X": 1 / 6.0, "CL=F": 1 / 6.0}
+# Tested in research/sleeve3.py: +10.9%/yr, maxDD -13.1% (beats the old 4-leg's
+# +7.6%/yr on the same window; the S&P 500 leg more than replaces crude).
+YF_TICKS = ["^NSEI", "GOLDBEES.NS", "^GSPC", "INR=X"]
+TARGET_WEIGHTS = {"^NSEI": 0.5, "GOLDBEES.NS": 0.25, "SPX_INR": 0.25}
 
 
 def next_rebalance_date(d):
@@ -74,14 +79,28 @@ def sleeve_update(state, prices, today):
 
 
 def fetch_prices():
+    """Latest closes per leg; SPX_INR is the composite ^GSPC x USDINR leg."""
     out = {}
-    data = yf.download(list(TARGET_WEIGHTS), period="10d", interval="1d",
-                       progress=False, auto_adjust=False)
-    close = data["Close"]
-    for leg in TARGET_WEIGHTS:
-        s = close[leg].dropna() if leg in close else pd.Series(dtype=float)
-        if len(s):
-            out[leg] = float(s.iloc[-1])
+    try:
+        data = yf.download(YF_TICKS, period="10d", interval="1d",
+                           progress=False, auto_adjust=False)["Close"]
+    except Exception:
+        return out
+
+    def last(tick):
+        try:
+            s = data[tick].dropna() if tick in getattr(data, "columns", []) else pd.Series(dtype=float)
+        except Exception:
+            s = pd.Series(dtype=float)
+        return float(s.iloc[-1]) if len(s) else None
+
+    nifty, gold, spx, fx = last("^NSEI"), last("GOLDBEES.NS"), last("^GSPC"), last("INR=X")
+    if nifty:
+        out["^NSEI"] = nifty
+    if gold:
+        out["GOLDBEES.NS"] = gold
+    if spx and fx:
+        out["SPX_INR"] = spx * fx  # S&P 500 in INR terms (Indian FOF valuation)
     return out
 
 

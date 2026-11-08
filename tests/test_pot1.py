@@ -2,7 +2,7 @@ import unittest
 from datetime import date
 from pot1 import sleeve_update, next_rebalance_date
 
-BASE = {"^NSEI": 100.0, "GOLDBEES.NS": 60.0, "INR=X": 88.0, "CL=F": 70.0}
+BASE = {"^NSEI": 100.0, "GOLDBEES.NS": 60.0, "SPX_INR": 9000.0}
 
 
 class TestPot1(unittest.TestCase):
