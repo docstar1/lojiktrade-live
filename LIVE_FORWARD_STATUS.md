@@ -1,36 +1,28 @@
 # Live Forward Scanner Status
 
-Last run: 2026-11-08T19:15:43.286989+00:00
+Last run: 2026-11-08T22:59:29.838178+00:00
 
 ## Account
-- Equity: $91.54 (target $1000.00)
-- Risk %: 1.5% (max 1.5%)
+- Equity: $100.00 (target $1000.00)
+- Risk %: 3.0% (max 3.0%)
 - Open positions: 0 / 3 (max 1 per market bucket)
-- Pending orders: 6
-- Closed trades: 7
-- Block stats: {'consecutive_losses': 4, 'blocked': True, 'cooldowns': [{'symbol': 'AMD', 'direction': 'long', 'tf': '1d', 'until': '2026-11-05 00:00:00+00:00'}, {'symbol': 'INFY.NS', 'direction': 'long', 'tf': '1h', 'until': '2026-11-04 09:45:00+00:00'}, {'symbol': 'ETH-USD', 'direction': 'short', 'tf': '1h', 'until': '2026-11-04 12:00:00+00:00'}, {'symbol': 'SBIN.NS', 'direction': 'short', 'tf': '1d', 'until': '2026-11-08 00:00:00+00:00'}, {'symbol': 'XLE', 'direction': 'long', 'tf': '1d', 'until': '2026-11-08 00:00:00+00:00'}], 's_min_current': 2.9, 'min_rr_current': 2.0, 'monthly_dd_pct': 0.0917167229633245, 'min_rr': 1.8, 'loss_block_expired_at': '2026-11-04 19:56:59.292330+00:00', 'block_reason': 'ELDER_6PCT_PIRANHA_GUARD'}
-- Dynamic thresholds: s_min 2.9 | min_rr 2.0
+- Pending orders: 0
+- Closed trades: 0
+- Block stats: {'consecutive_losses': 0, 's_min_current': 2.6, 'min_rr_current': 1.8, 'blocked': False, 'cooldowns': [], 'min_rr': 1.8, 'monthly_dd_pct': 0.0}
+- Dynamic thresholds: s_min 2.6 | min_rr 1.8
 
 ## Open Positions
 _None_
 
 ## Pending Orders
-| Symbol | Market | TF | Arch | Dir | Limit | Stop | Target | Score |
-|---|---|---|---|---|---|---|---|---|
-| SBIN.NS | IndiaNSE | 1d | P3_SWEEP | short | 1006.5500 | 1015.0777 | 988.6419 | 3.50 |
-| AVGO | US | 1d | F3_BREAKOUT | short | 321.6903 | 353.8401 | 250.9608 | 3.09 |
-| BAJFINANCE.NS | IndiaNSE | 1d | F3_BREAKOUT | long | 985.5108 | 896.0765 | 1182.2663 | 3.00 |
-| HAL.NS | IndiaNSE | 1d | F3_BREAKOUT | long | 4961.4810 | 4629.7464 | 5691.2971 | 3.00 |
-| COIN | US | 1d | F3_BREAKOUT | short | 158.3226 | 184.4326 | 100.8806 | 2.96 |
-| GC=F | FXCommod | 1d | MA7_TRUE | short | 4124.6436 | 4274.3264 | 3825.2780 | 2.95 |
+_None_
 
 ## Recent Closed Trades
-| Symbol | Market | TF | Arch | Dir | PnL R | Reason |
-|---|---|---|---|---|---|---|
-| HAL.NS | IndiaNSE | 1d | MA7_TRUE | long | 0.1971 | TIME_PROFIT_HARVEST |
-| XRP-USD | Crypto | 1d | P3_SWEEP | long | 0.3569 | TIME_PROFIT_HARVEST |
-| AMD | US | 1d | P3_SWEEP | long | -1.2486 | stop |
-| INFY.NS | IndiaNSE | 1h | F3_BREAKOUT | long | -1.0425 | stop |
-| ETH-USD | Crypto | 1h | MA7_TRUE | short | -1.1634 | stop |
-| SBIN.NS | IndiaNSE | 1d | P3_SWEEP | short | -1.0662 | stop |
-| XLE | US | 1d | P3_SWEEP | long | -2.1124 | stop |
+_None_
+
+
+## Two-pot plan (2026-11-09)
+- Pot 1 (income): Cover constant-mix sleeve - 50% Nifty + 1/6 gold (INR) + 1/6 USDINR + 1/6 oil, rebalanced monthly. Tracked by pot1.py in ledger.json under 'pot1'. Expect roughly +13%/yr with mild drawdowns.
+- Pot 2 (growth): this engine, risk per trade raised 1.5% -> 3.0% per the 5-year walk-forward ($100 -> $235 at 3.0%, maxDD ~$14; 6% collapses). Raise to 4.5% only after live results confirm the backtest.
+- Harvest floor raised 0.15R -> 0.50R (5y: banking at 0.15R cut winners). Soros gate dropped (5y: it blocked 917 of ~1,040 entries and cut $177 to $110).
+- Pool restricted to IndiaNSE symbols (2026-11-09, cost model): US/crypto/FX legs stay out; existing non-NSE positions keep being managed until they close.
