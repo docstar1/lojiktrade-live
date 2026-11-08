@@ -1,12 +1,12 @@
 # Live Forward Scanner Status
 
-Last run: 2026-11-08T08:00:00.340438+00:00
+Last run: 2026-11-08T14:55:06.202286+00:00
 
 ## Account
 - Equity: $91.54 (target $1000.00)
 - Risk %: 1.5% (max 1.5%)
 - Open positions: 0 / 3 (max 1 per market bucket)
-- Pending orders: 7
+- Pending orders: 6
 - Closed trades: 7
 - Block stats: {'consecutive_losses': 4, 'blocked': True, 'cooldowns': [{'symbol': 'AMD', 'direction': 'long', 'tf': '1d', 'until': '2026-11-05 00:00:00+00:00'}, {'symbol': 'INFY.NS', 'direction': 'long', 'tf': '1h', 'until': '2026-11-04 09:45:00+00:00'}, {'symbol': 'ETH-USD', 'direction': 'short', 'tf': '1h', 'until': '2026-11-04 12:00:00+00:00'}, {'symbol': 'SBIN.NS', 'direction': 'short', 'tf': '1d', 'until': '2026-11-08 00:00:00+00:00'}, {'symbol': 'XLE', 'direction': 'long', 'tf': '1d', 'until': '2026-11-08 00:00:00+00:00'}], 's_min_current': 2.9, 'min_rr_current': 2.0, 'monthly_dd_pct': 0.0917167229633245, 'min_rr': 1.8, 'loss_block_expired_at': '2026-11-04 19:56:59.292330+00:00', 'block_reason': 'ELDER_6PCT_PIRANHA_GUARD'}
 - Dynamic thresholds: s_min 2.9 | min_rr 2.0
@@ -18,7 +18,6 @@ _None_
 | Symbol | Market | TF | Arch | Dir | Limit | Stop | Target | Score |
 |---|---|---|---|---|---|---|---|---|
 | SBIN.NS | IndiaNSE | 1d | P3_SWEEP | short | 1006.5500 | 1015.0777 | 988.6419 | 3.50 |
-| BEL.NS | IndiaNSE | 1d | P3_SWEEP | short | 399.1500 | 406.8571 | 382.9650 | 3.24 |
 | AVGO | US | 1d | F3_BREAKOUT | short | 321.6903 | 353.8401 | 250.9608 | 3.09 |
 | BAJFINANCE.NS | IndiaNSE | 1d | F3_BREAKOUT | long | 985.5108 | 896.0765 | 1182.2663 | 3.00 |
 | HAL.NS | IndiaNSE | 1d | F3_BREAKOUT | long | 4961.4810 | 4629.7464 | 5691.2971 | 3.00 |
