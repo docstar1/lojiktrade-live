@@ -1,6 +1,6 @@
 # Live Forward Scanner Status
 
-Last run: 2026-11-08T22:59:29.838178+00:00
+Last run: 2026-11-09T02:30:02.912346+00:00
 
 ## Account
 - Equity: $100.00 (target $1000.00)
@@ -22,7 +22,7 @@ _None_
 
 
 ## Two-pot plan (2026-11-09)
-- Pot 1 (income): Cover constant-mix sleeve - 50% Nifty + 1/6 gold (INR) + 1/6 USDINR + 1/6 oil, rebalanced monthly. Tracked by pot1.py in ledger.json under 'pot1'. Expect roughly +13%/yr with mild drawdowns.
+- Pot 1 (income): buyable 3-leg sleeve - 50% Nifty ETF + 25% gold ETF + 25% S&P 500 in rupees (Indian index fund-of-fund; no USD, no oil), rebalanced monthly. Tracked by pot1.py in ledger.json under 'pot1'. Tested +10.9%/yr, maxDD -13% (5y).
 - Pot 2 (growth): this engine, risk per trade raised 1.5% -> 3.0% per the 5-year walk-forward ($100 -> $235 at 3.0%, maxDD ~$14; 6% collapses). Raise to 4.5% only after live results confirm the backtest.
 - Harvest floor raised 0.15R -> 0.50R (5y: banking at 0.15R cut winners). Soros gate dropped (5y: it blocked 917 of ~1,040 entries and cut $177 to $110).
 - Pool restricted to IndiaNSE symbols (2026-11-09, cost model): US/crypto/FX legs stay out; existing non-NSE positions keep being managed until they close.
