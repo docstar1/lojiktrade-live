@@ -1,12 +1,12 @@
 # Live Forward Scanner Status
 
-Last run: 2026-11-09T02:30:02.912346+00:00
+Last run: 2026-11-09T10:10:22.338335+00:00
 
 ## Account
 - Equity: $100.00 (target $1000.00)
 - Risk %: 3.0% (max 3.0%)
 - Open positions: 0 / 3 (max 1 per market bucket)
-- Pending orders: 0
+- Pending orders: 1
 - Closed trades: 0
 - Block stats: {'consecutive_losses': 0, 's_min_current': 2.6, 'min_rr_current': 1.8, 'blocked': False, 'cooldowns': [], 'min_rr': 1.8, 'monthly_dd_pct': 0.0}
 - Dynamic thresholds: s_min 2.6 | min_rr 1.8
@@ -15,7 +15,9 @@ Last run: 2026-11-09T02:30:02.912346+00:00
 _None_
 
 ## Pending Orders
-_None_
+| Symbol | Market | TF | Arch | Dir | Limit | Stop | Target | Score |
+|---|---|---|---|---|---|---|---|---|
+| HAL.NS | IndiaNSE | 1d | MA7_TRUE | long | 4874.7896 | 4625.8882 | 5372.5924 | 2.80 |
 
 ## Recent Closed Trades
 _None_
