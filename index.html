@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LojikTrade Two-Pot Dashboard</title>
+<title>LojikTrade · The Two-Pot Plan</title>
 <style>
 :root{--bg:#0a0f1c;--card:#111827;--card2:#0e1626;--accent:#3b82f6;--teal:#2dd4bf;--good:#22c55e;--bad:#ef4444;--warn:#f59e0b;--text:#e5e7eb;--muted:#94a3b8;--border:#1f2937}
 *{box-sizing:border-box}
-body{margin:0;font-family:Segoe UI,Roboto,system-ui,sans-serif;background:var(--bg);color:var(--text)}
+body{margin:0;font-family:Segoe UI,Roboto,system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.55}
 header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
-h1{margin:0;font-size:19px}
+h1{margin:0;font-size:20px}
 .subline{font-size:12px;color:var(--muted);margin-top:3px}
 .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600}
 .badge.live{background:rgba(34,197,94,.15);color:var(--good);border:1px solid var(--good)}
@@ -17,14 +17,30 @@ h1{margin:0;font-size:19px}
 .badge.plain{background:#1f2937;color:var(--text);border:1px solid var(--border)}
 .dot{width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse 1.2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.container{padding:16px 20px;max-width:1400px;margin:0 auto}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
-button{background:var(--accent);color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600}
-button.secondary{background:#374151}
-.pots{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-bottom:16px}
-.how .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
-.how .step{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.5}
-.how .step .k{color:var(--teal);font-weight:700;font-size:11px;letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px}
+.container{padding:16px 20px;max-width:1000px;margin:0 auto}
+h2{font-size:16px;margin:26px 0 10px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px}
+.action{border-radius:14px;padding:16px 18px;margin-bottom:12px;border:1px solid var(--border);background:var(--card)}
+.action.wait{border-color:var(--warn);background:linear-gradient(180deg,rgba(245,158,11,.08),rgba(245,158,11,.02))}
+.action.hold{border-color:var(--accent);background:linear-gradient(180deg,rgba(59,130,246,.08),rgba(59,130,246,.02))}
+.action.quiet{border-color:var(--border)}
+.action .head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.action .verdict{font-size:15px;font-weight:800;letter-spacing:.5px;padding:3px 12px;border-radius:999px;text-transform:uppercase}
+.verdict.wait{background:rgba(245,158,11,.18);color:var(--warn);border:1px solid var(--warn)}
+.verdict.hold{background:rgba(59,130,246,.18);color:#93c5fd;border:1px solid var(--accent)}
+.verdict.quiet{background:#1f2937;color:var(--muted);border:1px solid var(--border)}
+.action .pottag{font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--muted)}
+.action .body{font-size:15px}
+.action .why{margin-top:10px;padding:10px 12px;background:var(--card2);border:1px solid var(--border);border-radius:10px;font-size:13px;color:var(--muted)}
+.action .why b{color:var(--text)}
+.action .ticket{margin-top:10px;padding:10px 12px;background:#0b1220;border:1px dashed var(--border);border-radius:10px;font-size:13px;font-family:Consolas,monospace;white-space:pre-wrap}
+.scanline{font-size:12px;color:var(--muted);margin:6px 0 0}
+.rules{counter-reset:r}
+.rules li{margin-bottom:12px;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;list-style:none;counter-increment:r;font-size:14px}
+.rules li::before{content:counter(r);display:inline-block;width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;margin-right:10px;font-size:13px}
+.rules li b{display:block;margin-bottom:3px}
+.rules li .whyline{color:var(--muted);font-size:13px}
+.pots{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:16px}
 .pot{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;position:relative}
 .pot .val{font-size:26px;font-weight:700;margin-top:6px}
 .pot .sub{font-size:12px;color:var(--muted);margin-top:4px}
@@ -35,30 +51,37 @@ button.secondary{background:#374151}
 .chips{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
 .chips span{font-size:11px;padding:3px 8px;border-radius:999px;background:#1f2937;color:var(--muted);border:1px solid var(--border)}
 canvas{width:100%;height:auto;background:var(--card2);border:1px solid var(--border);border-radius:10px;margin-top:10px}
-.progress{height:10px;background:#1f2937;border-radius:999px;overflow:hidden;margin-top:10px}
-.progress>div{height:100%;background:linear-gradient(90deg,var(--accent),var(--good));transition:width .4s}
-.mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:12px}
-.mini div{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:8px 10px}
-.mini .k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
-.mini .v{font-size:15px;font-weight:700;margin-top:2px}
-.section{margin-bottom:20px}
-.section h2{font-size:15px;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
-table{width:100%;border-collapse:collapse;font-size:13px}
+.mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:10px}
+.mini>div{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:8px 10px}
+.mini .k{font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+.mini .v{font-size:16px;font-weight:700;margin-top:2px}
+.v.good{color:var(--good)}.v.bad{color:var(--bad)}
+.fine ul{margin:8px 0 0;padding-left:18px}
+.fine li{font-size:13px;color:var(--muted);margin-bottom:8px}
+.fine li b{color:var(--text)}
+details.admin{margin-top:26px;border:1px solid var(--border);border-radius:14px;background:var(--card)}
+details.admin summary{padding:12px 18px;cursor:pointer;font-weight:600}
+.admin-body{padding:0 18px 18px}
+.tbl-wrap{overflow-x:auto;margin-bottom:14px}
+table{width:100%;border-collapse:collapse;font-size:12px}
 th,td{padding:6px 8px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
-th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--card)}
-.tbl-wrap{max-height:360px;overflow:auto;border:1px solid var(--border);border-radius:10px;background:var(--card)}
-.status-line{font-size:13px;color:var(--muted)}
-.good{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)}
-.mono{font-family:Consolas,monospace;font-size:11px}
-.kreil{display:inline-block;padding:2px 6px;border-radius:999px;font-size:10px;background:rgba(59,130,246,.15);color:#93c5fd;border:1px solid #3b82f6;margin-left:4px;white-space:nowrap}
-footer{padding:14px 20px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);max-width:1400px;margin:0 auto}
+th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+td.mono{font-family:Consolas,monospace}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+button{background:var(--accent);color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600}
+button.secondary{background:#374151}
+.status-line{font-size:12px;color:var(--muted)}
+.status-line.bad{color:var(--bad)}
+.good{color:var(--good)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+.kreil{font-size:10px;padding:1px 6px;border-radius:6px;white-space:nowrap}
+footer{padding:16px 20px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);margin-top:26px}
 </style>
 </head>
 <body>
 <header>
   <div>
-    <h1>LojikTrade &middot; Two-Pot Dashboard</h1>
-    <div class="subline">Pot 1 pays the draw, Pot 2 grows the corpus &middot; target Rs 1,000/month &middot; paper run started Nov 9, 2026 &middot; marks to market every 30s</div>
+    <h1>LojikTrade · The Two-Pot Plan</h1>
+    <div class="subline">One income jar, one growth jar · target Rs 1,000 a month · nothing real is at risk yet</div>
   </div>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
     <span id="liveBadge" class="badge offline"><span class="dot"></span>Connecting</span>
@@ -67,87 +90,130 @@ footer{padding:14px 20px;border-top:1px solid var(--border);font-size:12px;color
   </div>
 </header>
 <div class="container">
-  <div class="row">
-    <button id="tickBtn">Tick Now</button>
-    <button id="pauseBtn" class="secondary">Pause</button>
-    <button id="verifyBtn" class="secondary">Verify Seals</button>
-    <span id="errLine" class="status-line bad"></span>
+
+  <div class="card">
+    <h2 style="margin-top:0">What is this?</h2>
+    <p style="margin:0 0 8px">There are two money jars. <b>Jar 1 (Income)</b> is planted in three big, boring investments and is meant to pay about Rs 1,000 every month. <b>Jar 2 (Growth)</b> is a small robot that trades Indian stocks to grow the pot, and hands extra money to Jar 1.</p>
+    <p style="margin:0">Right now both jars run on <b>paper money</b> (pretend rupees) so the robot can prove itself for two weeks before any real rupee moves. This page says what each jar is doing and what, if anything, you should do. Usually the answer is: nothing.</p>
   </div>
 
-  <div class="section how">
-    <h2>How this works</h2>
-    <div class="steps">
-      <div class="step"><div class="k">1 &middot; Now &middot; paper run</div><div>Both pots run on fake money for two weeks (started Nov 9, 2026), so the live engine proves itself before any real rupee moves.</div></div>
-      <div class="step"><div class="k">2 &middot; Then &middot; funding</div><div>Rs 50,000 goes into each pot. Pot 1 buys the income sleeve below; Pot 2 runs the trading engine.</div></div>
-      <div class="step"><div class="k">3 &middot; The monthly draw</div><div>Target: <b>Rs 1,000/month income</b>. Pot 1 pays it (tested ~Rs 437/month per Rs 50k at +10.9%/yr); Pot 2 trades NSE stocks at <b>3% risk per trade</b> to grow the corpus and tops up Pot 1.</div></div>
-    </div>
-  </div>
+  <h2>What should I do right now?</h2>
+  <div id="actionPot2"></div>
+  <div id="actionSell"></div>
+  <div id="actionPot1"></div>
+  <p class="scanline" id="scanLine"></p>
+
+  <h2>How the machine decides (and why)</h2>
+  <ol class="rules">
+    <li><b>It only buys a pattern that already made money in a 5-year test.</b>Every possible buy gets a score. Below the pass mark, it does nothing.<div class="whyline">Why: no gut feelings, no guessing. The same rulebook decides every single day, so results can be measured honestly.</div></li>
+    <li><b>It waits for a cheaper price before buying.</b>It leaves an order to buy only if the price dips to a set level. If the dip never comes, nothing is bought.<div class="whyline">Why: chasing a price up is how most beginners lose money.</div></li>
+    <li><b>Every buy comes with the sell written first.</b>The moment a buy happens, two exits are set: a stop (sell if it drops, keeping the loss small) and a target (sell if it rises, banking the profit).<div class="whyline">Why: a trade without an exit plan is a hope, not a plan.</div></li>
+    <li><b>One trade can never lose more than 3% of the jar.</b>On a Rs 50,000 jar that is Rs 1,500.<div class="whyline">Why: it would take roughly 33 losses in a row to empty the jar. The 5-year test never came close to that.</div></li>
+    <li><b>It takes profit off the table early.</b>Once a trade is comfortably ahead, part of the gain is banked instead of waiting for the full target.<div class="whyline">Why: in the 5-year test, banking early grew more money than holding out for the big win.</div></li>
+    <li><b>It trades Indian stocks only.</b><div class="whyline">Why: tested with real costs, the US, crypto and forex legs did not pay for their own fees and taxes at this jar size. They can come back when the jar is much bigger.</div></li>
+  </ol>
 
   <div class="pots">
     <div class="pot pot1">
-      <div class="pot-title"><span class="pot-tag">POT 1</span>Income pot &middot; pays the monthly draw</div>
-      <div class="val" id="pot1Nav">&mdash;</div>
-      <div class="sub" id="pot1Sub">50% Nifty &middot; 25% gold &middot; 25% S&amp;P 500 in rupees &middot; rebalanced monthly</div>
-      <div class="chips" id="pot1Weights"><span>Nifty 50%</span><span>Gold 25%</span><span>S&amp;P 500 25%</span></div>
-      <div class="sub" id="pot1Start">starting today</div>
-      <canvas id="pot1Canvas" width="640" height="130"></canvas>
+      <div class="pot-title"><span class="pot-tag">JAR 1</span>Income jar &middot; pays the monthly Rs 1,000</div>
+      <div class="val" id="pot1Val">&mdash;</div>
+      <div class="sub" id="pot1Sub">&mdash;</div>
+      <div class="chips" id="pot1Chips"></div>
+      <div class="sub" id="pot1Note" style="margin-top:6px"></div>
+      <canvas id="pot1Canvas" width="640" height="140"></canvas>
     </div>
     <div class="pot pot2">
-      <div class="pot-title"><span class="pot-tag">POT 2</span>Growth pot &middot; LojikTrade engine</div>
-      <div class="val" id="equity">$0.00</div>
-      <div class="sub">Target \u20B95,00,000 &middot; <span id="riskPct">3.0%</span> risk per trade &middot; IndiaNSE pool only &middot; max 3 slots</div>
-      <div class="progress"><div id="eqProgress" style="width:0%"></div></div>
+      <div class="pot-title"><span class="pot-tag">JAR 2</span>Growth jar &middot; the trading robot</div>
+      <div class="val" id="pot2Val">&mdash;</div>
+      <div class="sub" id="pot2Sub">&mdash;</div>
       <div class="mini">
-        <div><div class="k">Open</div><div class="v" id="openCount">0</div></div>
-        <div><div class="k">Pending</div><div class="v" id="pendCount">0</div></div>
-        <div><div class="k">Closed</div><div class="v" id="closedCount">0</div></div>
-        <div><div class="k">Risk guard</div><div class="v" id="blockState">OK</div></div>
+        <div><div class="k">Owning</div><div class="v" id="openCount">0</div></div>
+        <div><div class="k">Waiting to buy</div><div class="v" id="pendCount">0</div></div>
+        <div><div class="k">Trades done</div><div class="v" id="closedCount">0</div></div>
+        <div><div class="k">Robot health</div><div class="v" id="blockState">OK</div></div>
       </div>
-      <div class="sub" id="blockSub">Consecutive losses: 0 | s_min: 2.9 | min_rr: 2.0 | monthly DD: 0.0%</div>
+      <div class="sub" id="blockSub"></div>
     </div>
   </div>
 
   <div class="section">
-    <h2>Engine equity curve (live ticks)</h2>
-    <canvas id="eqCanvas" width="1200" height="220"></canvas>
+    <h2>Jar 1 since it started</h2>
+    <canvas id="pot1Chart" width="1000" height="200"></canvas>
+  </div>
+  <div class="section">
+    <h2>Jar 2 equity (live ticks while this page is open)</h2>
+    <canvas id="eqCanvas" width="1000" height="200"></canvas>
   </div>
 
-  <div class="section">
-    <h2>Open Positions <span class="status-line" id="openSub"></span></h2>
-    <div class="tbl-wrap"><table>
-      <thead><tr><th>Symbol</th><th>Market</th><th>TF</th><th>Arch</th><th>Dir</th><th>Entry</th><th>Live</th><th>Stop</th><th>Target</th><th>Unreal R</th><th>Risk$</th><th>Seal</th></tr></thead>
-      <tbody id="openBody"></tbody>
-    </table></div>
+  <div class="card fine">
+    <h2 style="margin-top:0">The honest fine print</h2>
+    <ul>
+      <li><b>The test window had no crash.</b> The 5-year test (Nov 2021 to Nov 2026) does not contain a 2008-style crash, so the real worst dip can be deeper than the tested numbers.</li>
+      <li><b>Rs 437/month per Rs 50,000 is a test average, not a promise.</b> Some months will pay Rs 0. The plan needs years, not weeks.</li>
+      <li><b>Everything is paper money until about Nov 23, 2026.</b> Two weeks of live paper trading must pass before real rupees are considered.</li>
+      <li><b>The robot never touches a real broker.</b> It prepares tickets; you place any real order yourself in Zerodha.</li>
+      <li><b>1 paper unit = Rs 500.</b> Jar sizes are shown in rupees on that basis; share prices are real NSE rupee prices.</li>
+    </ul>
   </div>
 
-  <div class="section">
-    <h2>Pending Resting Limit Orders <span class="status-line" id="pendSub"></span></h2>
-    <div class="tbl-wrap"><table>
-      <thead><tr><th>Symbol</th><th>Market</th><th>TF</th><th>Arch</th><th>Dir</th><th>Limit</th><th>Live</th><th>Stop</th><th>Target</th><th>Score</th><th>Seal</th></tr></thead>
-      <tbody id="pendBody"></tbody>
-    </table></div>
-  </div>
-
-  <div class="section">
-    <h2>Recent Closed Trades <span class="status-line" id="closedSub"></span></h2>
-    <div class="tbl-wrap"><table>
-      <thead><tr><th>Symbol</th><th>Market</th><th>TF</th><th>Arch</th><th>Dir</th><th>Entry</th><th>Exit</th><th>PnL R</th><th>Reason</th></tr></thead>
-      <tbody id="closedBody"></tbody>
-    </table></div>
-  </div>
+  <details class="admin">
+    <summary>Admin: raw tables, tick controls, seal checks</summary>
+    <div class="admin-body">
+      <div class="row">
+        <button id="tickBtn">Tick Now</button>
+        <button id="pauseBtn" class="secondary">Pause</button>
+        <button id="verifyBtn" class="secondary">Verify Seals</button>
+        <span id="errLine" class="status-line bad"></span>
+      </div>
+      <div class="section"><h2 style="margin-top:10px">Open Positions</h2>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Symbol</th><th>Market</th><th>TF</th><th>Arch</th><th>Dir</th><th>Entry</th><th>Live</th><th>Stop</th><th>Target</th><th>Unreal R</th><th>Risk$</th><th>Seal</th></tr></thead>
+        <tbody id="openBody"></tbody>
+      </table></div></div>
+      <div class="section"><h2 style="margin-top:10px">Pending Resting Limit Orders</h2>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Symbol</th><th>Market</th><th>TF</th><th>Arch</th><th>Dir</th><th>Limit</th><th>Live</th><th>Stop</th><th>Target</th><th>Score</th><th>Seal</th></tr></thead>
+        <tbody id="pendBody"></tbody>
+      </table></div></div>
+      <div class="section"><h2 style="margin-top:10px">Recent Closed Trades</h2>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Symbol</th><th>Market</th><th>TF</th><th>Arch</th><th>Dir</th><th>Entry</th><th>Exit</th><th>PnL R</th><th>Reason</th></tr></thead>
+        <tbody id="closedBody"></tbody>
+      </table></div></div>
+    </div>
+  </details>
 </div>
-<footer>Two pots, one plan &middot; Rs 1,000/month draw target &middot; Pot 2 trades NSE stocks only (US/crypto/FX legs don't pay their costs at this pot size) &middot; paper $1 = Rs 500, headline figures shown in rupees, trade tables stay in paper units &middot; data refreshes from ledger.json on every cloud scan</footer>
+<footer>Two pots, one plan &middot; Rs 1,000/month draw target &middot; Jar 1: 50% Nifty + 25% gold + 25% S&amp;P 500 in rupees, rebalanced monthly &middot; Jar 2: NSE stocks only, 3% risk per trade &middot; data refreshes from ledger.json on every cloud scan</footer>
 
 <script>
 const LEDGER_LOCAL_URL = 'ledger.json?t=' + Date.now();
-const LEDGER_CLOUD_URL = 'https://raw.githubusercontent.com/docstar1/lojiktrade-live/main/ledger.json?t=' + Date.now();const SITE_PASS_HASH = '4d3c9183e8d216fe10c2dfdb08fd640a62e309029b05da8adc553869e9faea8c';
+const LEDGER_CLOUD_URL = 'https://raw.githubusercontent.com/docstar1/lojiktrade-live/main/ledger.json?t=' + Date.now();
+const SITE_PASS_HASH = '4d3c9183e8d216fe10c2dfdb08fd640a62e309029b05da8adc553869e9faea8c';
 async function gate(){
   const pw = prompt('LojikTrade dashboard password');
   if (pw == null) return false;
   const h = await sha256Hex(pw);
   return h === SITE_PASS_HASH;
 }
+async function sha256Hex(s){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
 function inrFmt(u){ return Math.round(u*500).toLocaleString('en-IN'); }
+function rupees(n){ return '₹' + Math.round(n).toLocaleString('en-IN'); }
+function parseUTC(s){
+  if (s == null) return null;
+  s = String(s);
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(s)) s = s.replace(' ', 'T') + 'Z';
+  const d = new Date(s);
+  return isNaN(d) ? null : d;
+}
+function fmtIST(iso){
+  const d = parseUTC(iso);
+  if (!d) return String(iso || '—');
+  try{ return d.toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'numeric',month:'short',hour:'numeric',minute:'2-digit',hour12:true}) + ' IST'; }
+  catch(e){ return String(iso); }
+}
 let ledger = null; let serverLastRun = null;
 let prices = {};
 let equitySeries = [];
@@ -160,11 +226,6 @@ let countdownTimer = null;
 function costForMarket(m){
   return m==='IndiaNSE'?0.0011 : m==='US'?0.0004 : m==='Crypto'?0.0014 : m==='FXCommod'?0.00045 : 0.0005;
 }
-async function sha256Hex(s){
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-function isRejectedHash(hex){ const h = parseInt(hex.slice(0,16),16)/Math.pow(2,64); return h < 0.02; }
 
 async function fetchYahooPrice(sym){
   const url = 'https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(sym)+'?interval=1m&range=1d';
@@ -191,38 +252,23 @@ async function fetchYahooPrice(sym){
       if (closes){ for(let i=closes.length-1;i>=0;i--) if (closes[i]!=null) return Number(closes[i]); }
     }catch(e){}
   }
-  // CORS proxies failed: fall back to authoritative server-fetched price
   if (prices && prices[sym] != null) return Number(prices[sym]);
   if (ledger && ledger.spot_prices && ledger.spot_prices[sym] != null){
     const sp = ledger.spot_prices[sym];
-    const v = (sp && (sp.price != null ? sp.price : (sp.last_price || sp.current_price))) ;
+    const v = (sp && (sp.price != null ? sp.price : (sp.last_price || sp.current_price)));
     if (v != null) return Number(v);
   }
-  const sp = ledger && ledger.spot_prices && ledger.spot_prices[sym];
-  const fallback = prices[sym] ?? (sp == null ? null : typeof sp === 'object' ? Number(sp.price) : Number(sp));
-  return Number.isFinite(fallback) ? fallback : null;
+  return null;
 }
 
 async function fetchAllPrices(){
-  const out = (prices && typeof prices === 'object') ? Object.assign({}, prices) : {};
-  let binanceMap = null;
-  try{
-    const r = await fetch('https://api.binance.com/api/v3/ticker/price', {signal: AbortSignal.timeout(9000)});
-    const arr = await r.json();
-    binanceMap = {};
-    for (const x of arr) binanceMap[x.symbol] = parseFloat(x.price);
-  }catch(e){}
-  const syms = new Set([...(ledger.open_positions||[]).map(p=>p.symbol), ...(ledger.pending_orders||[]).map(o=>o.symbol)]);
-  for (const s of syms){
-    if (s.endsWith('-USD')){
-      const bs = s.replace('-USD','USDT');
-      if (binanceMap && binanceMap[bs]!=null) out[s]=binanceMap[bs];
-    }
-  }
-  const yahooSyms = [...syms].filter(s=>!s.endsWith('-USD'));
-  await Promise.allSettled(yahooSyms.map(async sym=>{
-    const p = await fetchYahooPrice(sym);
-    if (p!=null) out[sym]=p;
+  const syms = new Set();
+  for (const p of (ledger.open_positions||[])) if (p.symbol) syms.add(p.symbol);
+  for (const o of (ledger.pending_orders||[])) if (o.symbol) syms.add(o.symbol);
+  const out = {};
+  await Promise.all(Array.from(syms).map(async s=>{
+    const v = await fetchYahooPrice(s);
+    if (v != null) out[s] = v;
   }));
   return out;
 }
@@ -230,7 +276,6 @@ async function fetchAllPrices(){
 function seedPricesFromLedger(L, forceOverwrite = false){
   if (!L) return;
   if (!prices || typeof prices !== 'object') prices = {};
-  // spot_prices authoritative
   if (L.spot_prices && typeof L.spot_prices === 'object'){
     for (const sym in L.spot_prices){
       if (forceOverwrite || prices[sym] == null){
@@ -244,7 +289,6 @@ function seedPricesFromLedger(L, forceOverwrite = false){
       }
     }
   }
-  // open positions fallback
   for (const p of (L.open_positions || [])){
     if (!p || !p.symbol) continue;
     if (forceOverwrite || prices[p.symbol] == null){
@@ -252,7 +296,6 @@ function seedPricesFromLedger(L, forceOverwrite = false){
       if (v != null && v !== '') prices[p.symbol] = Number(v);
     }
   }
-  // pending orders fallback
   for (const o of (L.pending_orders || [])){
     if (!o || !o.symbol) continue;
     if (forceOverwrite || prices[o.symbol] == null){
@@ -266,22 +309,12 @@ function kreilBadge(k){
   if (!k) return '';
   let src = k;
   if (k.metrics && typeof k.metrics === 'object') src = Object.assign({}, k, k.metrics);
-  const atr = src.atr_ratio ?? src.atr5_250 ?? src.atr_5_250 ?? src.atr ?? src.ratio ?? src.atr5 ?? src['atr5/250'] ?? src.atrRatio ?? src.atr5over250;
-  const sk = src.skew ?? src.sk ?? src.skewness ?? src.Sk ?? src.skew_ ?? src.skewness_;
   const failed = (src.passed === false || src.ok === false || src.regime === 'fail' || src.status === 'fail');
   const ok = failed ? '✗' : '✓';
   const style = failed
     ? 'background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.35)'
     : 'background:rgba(16,185,129,.15);color:#34d399;border:1px solid rgba(16,185,129,.35)';
-  let txt = 'KREIL ' + ok;
-  if (atr != null && !isNaN(Number(atr))) txt += ' ATR5/250: ' + Number(atr).toFixed(2);
-  if (sk != null && !isNaN(Number(sk))){
-    const n = Number(sk);
-    txt += ' | Sk: ' + (n >= 0 ? '+' : '') + n.toFixed(2);
-  }
-  if (src.reason) txt += ' (' + src.reason + ')';
-  if (src.boost_applied === true || Number(src.score_boost) > 0) txt += ' +0.15 boost';
-  return ' <span class="kreil" style="' + style + '">' + txt + '</span>';
+  return ' <span class="kreil" style="' + style + '">KREIL ' + ok + '</span>';
 }
 
 async function refreshLedgerFromServer(){
@@ -291,21 +324,16 @@ async function refreshLedgerFromServer(){
     catch(e){ r = await fetch('https://raw.githubusercontent.com/docstar1/lojiktrade-live/main/ledger.json?t=' + Date.now()); if (!r || !r.ok) throw new Error((r && r.status) || 'cloud fail'); }
     const fetched = await r.json();
     if (!fetched || typeof fetched !== 'object') return;
-    // normalize
     if (!fetched.account) fetched.account = {equity:100, risk_pct:0.03, target:1000};
     if (!fetched.open_positions) fetched.open_positions = [];
     if (!fetched.pending_orders) fetched.pending_orders = [];
     if (!fetched.closed_trades) fetched.closed_trades = [];
     if (!fetched.block_stats) fetched.block_stats = {consecutive_losses:0, blocked:false};
-    // decide update
     let update = false;
     if (!ledger) update = true;
     else if (fetched.last_run && fetched.last_run !== serverLastRun) update = true;
     else {
-      // spot_prices updated?
-      try{
-        if (JSON.stringify(fetched.spot_prices) !== JSON.stringify(ledger.spot_prices)) update = true;
-      }catch(e){}
+      try{ if (JSON.stringify(fetched.spot_prices) !== JSON.stringify(ledger.spot_prices)) update = true; }catch(e){}
     }
     if (update){
       ledger = fetched;
@@ -326,16 +354,13 @@ async function tick(){
   document.getElementById('errLine').textContent='';
   try{
     await refreshLedgerFromServer();
-    // seed marks from the ledger BEFORE fetching so every symbol has a baseline
     seedPricesFromLedger(ledger, false);
     const fetched = await fetchAllPrices();
     prices = Object.assign({}, prices || {}, fetched || {});
-    // any symbol still missing a mark falls back to the ledger's spot_prices/entry
     seedPricesFromLedger(ledger, false);
     normalizePositions();
     const now = new Date().toISOString();
     const open = ledger.open_positions;
-    // live mark-to-market: ratchet stops + unrealized_r only (authoritative fills/closes stay on server)
     for (const pos of open){
       const p = prices[pos.symbol];
       if (p==null) continue;
@@ -343,13 +368,11 @@ async function tick(){
       const risk = pos.direction==='long' ? (pos.entry_price-pos.initial_stop) : (pos.initial_stop-pos.entry_price);
       if (risk<=0) continue;
       const unreal = pos.direction==='long' ? (p-pos.entry_price)/risk : (pos.entry_price-p)/risk;
-      // ratchet
       if (unreal>=1.2){
         if (pos.direction==='long'){ const ns=pos.entry_price+0.30*risk; if(ns>pos.stop_price) pos.stop_price=ns; }
         else { const ns=pos.entry_price-0.30*risk; if(ns<pos.stop_price) pos.stop_price=ns; }
       }
       if (unreal>=2.2){
-        // chandelier branch — mirrors scanner_worker.step_a_update_positions
         const arch = pos.arch || '';
         const floor = pos.direction==='long' ? pos.entry_price+1.20*risk : pos.entry_price-1.20*risk;
         let ns = floor;
@@ -370,7 +393,6 @@ async function tick(){
       }
       pos.unrealized_r = unreal;
     }
-    // pending orders: live price refresh only (no browser fills)
     const pending = ledger.pending_orders;
     for (const o of pending){
       const p = prices[o.symbol];
@@ -391,27 +413,171 @@ async function tick(){
   }
 }
 
+function normalizePositions(){
+  if (!ledger || !Array.isArray(ledger.open_positions)) return;
+  for (const p of ledger.open_positions){
+    if (!p) continue;
+    if (p.stop_price == null && p.stop != null) p.stop_price = p.stop;
+    if (p.initial_stop == null) p.initial_stop = p.stop_price;
+  }
+}
+
+/* ---------- action cards ---------- */
+function riskRupees(){ return ledger.account.equity * ledger.account.risk_pct * 500; }
+
+function pot2ActionHTML(){
+  const open = ledger.open_positions || [];
+  const pend = ledger.pending_orders || [];
+  const rr = riskRupees();
+  if (open.length){
+    let cards = '';
+    for (const p of open){
+      const live = prices[p.symbol] != null ? prices[p.symbol] : (p.last_price != null ? p.last_price : p.entry_price);
+      const dir = p.direction === 'short' ? 'down' : 'up';
+      const unrealR = p.unrealized_r != null ? p.unrealized_r : 0;
+      const pnlRs = unrealR * rr;
+      const sign = pnlRs >= 0 ? '+' : '−';
+      cards += `<div class="action hold"><div class="head"><span class="verdict hold">Hold</span><span class="pottag">JAR 2 · you own a stock</span></div>
+        <div class="body">You own <b>${p.symbol}</b>, bought at ₹${Number(p.entry_price).toFixed(2)} (it is ₹${live!=null?Number(live).toFixed(2):'—'} now, ${sign}${rupees(Math.abs(pnlRs))} on paper).
+        <br><br><b>Your job: nothing.</b> Selling happens by itself:
+        <br>&bull; if it falls to <b>₹${Number(p.stop_price).toFixed(2)}</b>, it sells there, so the worst this trade can do is lose about <b>${rupees(rr)}</b> (3% of the jar);
+        <br>&bull; if it rises to <b>₹${Number(p.target_price).toFixed(2)}</b>, it sells there and banks about <b>${rupees(rr*2)}</b> of profit;
+        <br>&bull; and once it is comfortably ahead, part of the profit is banked early and the sell level moves up behind the price.</div></div>`;
+    }
+    return cards;
+  }
+  if (pend.length){
+    let cards = '';
+    for (const o of pend){
+      const live = prices[o.symbol] != null ? prices[o.symbol] : (o.last_price != null ? Number(o.last_price) : null);
+      const limit = Number(o.limit_price), stop = Number(o.stop_price), target = Number(o.target_price);
+      const dist = live != null ? ((limit-live)/live*100) : null;
+      const qty = rr/(limit-stop);
+      const posSize = qty*limit;
+      const score = Number(o.score), smin = (ledger.block_stats && ledger.block_stats.s_min_current) || 2.6;
+      const whyKreil = o.kreil && o.kreil.passed !== false ? 'passed' : 'failed';
+      cards += `<div class="action wait"><div class="head"><span class="verdict wait">Wait</span><span class="pottag">JAR 2 · an order is parked</span></div>
+        <div class="body">The robot wants to buy <b>${o.symbol}</b>, but <b>only if the price dips to ₹${limit.toFixed(2)}</b>${live!=null?` (right now it is ₹${Number(live).toFixed(2)}, about ${Math.abs(dist).toFixed(1)}% away)`:''}.
+        <br><br><b>Your job: nothing yet.</b> If the dip never comes, the order expires and nothing is bought. If it does buy, it will hold roughly <b>${qty.toFixed(1)} shares</b> (about ${rupees(posSize)} of the jar), and the exits are set the same second:
+        <br>&bull; sell at <b>₹${stop.toFixed(2)}</b> if it drops &rarr; worst loss about <b>${rupees(rr)}</b> (3% of the jar);
+        <br>&bull; sell at <b>₹${target.toFixed(2)}</b> if it rises &rarr; profit about <b>${rupees(rr*2)}</b>.</div>
+        <div class="why"><b>Why this stock?</b> Its price pattern scored <b>${score.toFixed(2)}</b> against a pass mark of <b>${Number(smin).toFixed(2)}</b> — a setup that made money in the 5-year test — it offers about <b>${Number(o.rr).toFixed(1)}x reward for the risk</b>, and the market-weather check ${whyKreil}.</div>
+        <div class="ticket">Paper ticket — ${o.symbol} ${o.direction.toUpperCase()} · limit ₹${limit.toFixed(2)} · stop ₹${stop.toFixed(2)} · target ₹${target.toFixed(2)} · placed ${fmtIST(o.placed_bar_time || o.order_id)}</div></div>`;
+    }
+    return cards;
+  }
+  return `<div class="action quiet"><div class="head"><span class="verdict quiet">Do nothing</span><span class="pottag">JAR 2 · the robot is waiting</span></div>
+    <div class="body">The robot checked all its Indian stocks at its last scan and found nothing worth buying today. <b>That is normal — most days it waits.</b> A trade only appears when a tested price pattern shows up. When it does, this box will turn orange and tell you exactly what it plans to do.</div></div>`;
+}
+
+function sellActionHTML(){
+  const open = ledger.open_positions || [];
+  if (open.length){
+    let lines = '';
+    for (const p of open){
+      lines += `&bull; <b>${p.symbol}</b>: sells itself at ₹${Number(p.stop_price).toFixed(2)} (loss cap) or ₹${Number(p.target_price).toFixed(2)} (profit).<br>`;
+    }
+    return `<div class="action hold"><div class="head"><span class="verdict hold">Nothing to sell by hand</span><span class="pottag">SELLING</span></div>
+      <div class="body">You never have to guess when to sell. Every holding already carries its two exits:${lines}</div></div>`;
+  }
+  return `<div class="action quiet"><div class="head"><span class="verdict quiet">Nothing to sell</span><span class="pottag">SELLING</span></div>
+    <div class="body">You own no shares today, so there is nothing to sell. When you do own shares, selling happens automatically: the stop and target prices are written the moment a trade opens.</div></div>`;
+}
+
+function pot1ActionHTML(){
+  const p1 = ledger.pot1;
+  if (!p1) return `<div class="action quiet"><div class="head"><span class="verdict quiet">Jar 1 warming up</span><span class="pottag">JAR 1</span></div><div class="body">Jar 1 has not started tracking yet; it starts on its first scan.</div></div>`;
+  const today = new Date().toISOString().slice(0,10);
+  const next = p1.next_rebalance;
+  let verdict, body;
+  if (p1.last_rebalance === today || p1.rebalanced_today){
+    verdict = 'Rebalance day'; body = `Today is a check-up day for Jar 1: the three funds get trimmed back to 50 / 25 / 25. Once funded for real, sell a little of whatever grew most and top up whatever lagged.`;
+  } else {
+    verdict = 'Nothing to buy'; body = `Jar 1 bought its three funds on <b>${p1.last_rebalance}</b> and now just sits there collecting. Next check-up: <b>${next}</b> (first trading day of the month).`;
+  }
+  return `<div class="action quiet"><div class="head"><span class="verdict quiet">${verdict}</span><span class="pottag">JAR 1 · the boring plan</span></div>
+    <div class="body">${body}<br><br>When it is funded with <b>₹50,000</b>, the shopping list is: <b>₹25,000</b> in a Nifty 50 index fund or ETF, <b>₹12,500</b> in a gold ETF (GoldBEES), <b>₹12,500</b> in an S&amp;P 500 fund bought in rupees (Motilal Oswal S&amp;P 500 FOF).</div></div>`;
+}
+
+/* ---------- charts ---------- */
+function drawPot1Chart(L){
+  const c = document.getElementById('pot1Chart');
+  if (!c || !L.pot1 || !Array.isArray(L.pot1.nav_history) || !L.pot1.nav_history.length) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  ctx.clearRect(0,0,W,H);
+  const pts = L.pot1.nav_history.map(s=>({d:s.date, v:Number(s.nav)}));
+  const vals = pts.map(p=>p.v).concat([1.0]);
+  let mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals);
+  const pad = Math.max(0.002, (mx-mn)*0.15); mn -= pad; mx += pad;
+  const y = v => H - 20 - (v-mn)/(mx-mn)*(H-40);
+  ctx.strokeStyle='#1f2937'; ctx.beginPath(); ctx.moveTo(0,y(1.0)); ctx.lineTo(W,y(1.0)); ctx.stroke();
+  ctx.strokeStyle='#2dd4bf'; ctx.lineWidth=2; ctx.beginPath();
+  pts.forEach((p,i)=>{ const x = pts.length===1 ? W/2 : i/(pts.length-1)*W; if(i===0) ctx.moveTo(x,y(p.v)); else ctx.lineTo(x,y(p.v)); });
+  ctx.stroke();
+  ctx.fillStyle='#2dd4bf';
+  const lx = pts.length===1 ? W/2 : (pts.length-1)/(pts.length-1)*W;
+  ctx.beginPath(); ctx.arc(lx, y(pts[pts.length-1].v), 4, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#94a3b8'; ctx.font='12px Segoe UI';
+  ctx.fillText('start 1.0000', 8, y(1.0)-6);
+  ctx.fillText('now ' + Number(pts[pts.length-1].v).toFixed(4), 8, 16);
+}
+
+function drawEquityChart(){
+  const c = document.getElementById('eqCanvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  ctx.clearRect(0,0,W,H);
+  if (equitySeries.length < 2) {
+    ctx.fillStyle='#94a3b8'; ctx.font='13px Segoe UI';
+    ctx.fillText('Paper equity is flat at ₹' + inrFmt(ledger.account.equity) + ' until the first trade fills. The line moves when trades happen.', 12, 24);
+    return;
+  }
+  const vals = equitySeries.map(s=>s.equity);
+  let mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals);
+  if (mx-mn < 0.5){ mx += 0.25; mn -= 0.25; }
+  const y = v => H - 20 - (v-mn)/(mx-mn)*(H-40);
+  ctx.strokeStyle='#1f2937'; ctx.beginPath(); ctx.moveTo(0,y(ledger.account.equity)); ctx.lineTo(W,y(ledger.account.equity)); ctx.stroke();
+  ctx.strokeStyle='#3b82f6'; ctx.lineWidth=2; ctx.beginPath();
+  equitySeries.forEach((s,i)=>{ const x = i/(equitySeries.length-1)*W; if(i===0) ctx.moveTo(x,y(s.equity)); else ctx.lineTo(x,y(s.equity)); });
+  ctx.stroke();
+}
+
+/* ---------- render ---------- */
 function renderAll(){
   if(!ledger) return;
   const acct = ledger.account;
-  document.getElementById('equity').textContent = '\u20B9'+inrFmt(acct.equity);
+  document.getElementById('pot2Val').textContent = '₹' + inrFmt(acct.equity);
+  document.getElementById('pot2Sub').textContent = 'paper pot of ₹50,000 (1 unit = ₹500) · ' + (acct.risk_pct*100).toFixed(1) + '% risk per trade (' + rupees(acct.equity*acct.risk_pct*500) + ') · NSE stocks only · max 3 trades at once';
   document.getElementById('openCount').textContent = ledger.open_positions.length;
   document.getElementById('pendCount').textContent = ledger.pending_orders.length;
   document.getElementById('closedCount').textContent = ledger.closed_trades.length;
   const bs = ledger.block_stats;
-  document.getElementById('blockState').textContent = bs.blocked ? 'BLOCKED' : 'OK';
-  document.getElementById('blockState').className = 'val ' + (bs.blocked?'bad':'good');
-  document.getElementById('blockSub').textContent = 'Consecutive losses: '+(bs.consecutive_losses||0)+' | s_min: '+(bs.s_min_current||2.6)+' | min_rr: '+(bs.min_rr_current||1.8)+' | monthly DD: '+(((bs.monthly_dd_pct||0)*100).toFixed(1))+'%'+(bs.block_until?' | until '+(new Date(bs.block_until)).toUTCString():'');
-  document.getElementById('riskPct').textContent = (acct.risk_pct*100).toFixed(1)+'%';
+  const bsEl = document.getElementById('blockState');
+  bsEl.textContent = bs.blocked ? 'Paused' : 'OK';
+  bsEl.className = 'v ' + (bs.blocked?'bad':'good');
+  document.getElementById('blockSub').textContent = bs.blocked
+    ? ('The robot paused itself: ' + (bs.consecutive_losses||0) + ' losses in a row' + (bs.block_until ? ', until ' + fmtIST(bs.block_until) : '') + '. It restarts automatically.')
+    : 'Consecutive losses: ' + (bs.consecutive_losses||0) + ' · pass mark ' + Number(bs.s_min_current||2.6).toFixed(2) + ' · monthly dip ' + (((bs.monthly_dd_pct||0)*100).toFixed(1)) + '%';
   const p1 = ledger.pot1;
-  if (p1) {
-    document.getElementById('pot1Nav').textContent = 'NAV ' + Number(p1.nav).toFixed(4);
-    document.getElementById('pot1Sub').textContent = (p1.total_return_pct>=0?'+':'') + Number(p1.total_return_pct).toFixed(2) + '% since start &middot; next rebalance ' + p1.next_rebalance;
+  if (p1){
+    const nav = Number(p1.nav)||1.0;
+    document.getElementById('pot1Val').textContent = rupees(nav*50000);
+    const tr = Number(p1.total_return_pct)||0;
+    document.getElementById('pot1Sub').textContent = (tr>=0?'+':'') + tr.toFixed(2) + '% since ' + p1.start_date + ' (₹50,000 planted) · next check-up ' + p1.next_rebalance;
+    document.getElementById('pot1Chips').innerHTML = '<span>Nifty 50%</span><span>Gold 25%</span><span>S&amp;P 500 (in ₹) 25%</span>';
+    document.getElementById('pot1Note').textContent = 'Tested over 5 years: about +10.9% a year, worst dip −13%. There was no big crash inside the test window, so the real worst dip can be deeper.';
+    drawPot1Chart(ledger);
   }
-  const pct = Math.min(100, Math.max(0, (acct.equity-100)/(1000-100)*100));
-  document.getElementById('eqProgress').style.width = pct+'%';
+  document.getElementById('actionPot2').innerHTML = pot2ActionHTML();
+  document.getElementById('actionSell').innerHTML = sellActionHTML();
+  document.getElementById('actionPot1').innerHTML = pot1ActionHTML();
+  document.getElementById('scanLine').textContent = 'Last machine check: ' + (ledger.last_run ? fmtIST(ledger.last_run) : '—') +
+    '. The scanner runs on GitHub\u2019s free scheduler: it aims for every 15 minutes but often lands only a few times a day. Everything on this page refreshes each check.';
+  drawEquityChart();
 
-  // open
+  // admin tables
   const ob = document.getElementById('openBody');
   ob.innerHTML = '';
   for (const pos of ledger.open_positions){
@@ -424,14 +590,9 @@ function renderAll(){
       <td class="mono">${(pos.seal_sha256||'').slice(0,10)}…</td>`;
     ob.appendChild(tr);
   }
-  document.getElementById('openSub').textContent = ledger.open_positions.length+' / 3 positions (max 1 per market bucket)';
-
-  // pending (cap render to 500)
   const pb = document.getElementById('pendBody');
   pb.innerHTML = '';
-  const pend = ledger.pending_orders;
-  for (let i=0;i<pend.length;i++){
-    const o = pend[i];
+  for (const o of ledger.pending_orders){
     const p = prices[o.symbol];
     const tr = document.createElement('tr');
     tr.innerHTML = `<td>${o.symbol}</td><td>${o.market}</td><td>${o.tf}</td><td>${o.arch}${kreilBadge(o.kreil)}</td><td>${o.direction}</td>
@@ -439,9 +600,6 @@ function renderAll(){
       <td>${Number(o.score).toFixed(2)}</td><td class="mono">${(o.seal_sha256||'').slice(0,10)}…</td>`;
     pb.appendChild(tr);
   }
-  document.getElementById('pendSub').textContent = pend.length+' orders';
-
-  // closed
   const cb = document.getElementById('closedBody');
   cb.innerHTML = '';
   const recent = (ledger.closed_trades||[]).slice(-20).reverse();
@@ -449,100 +607,9 @@ function renderAll(){
     const tr = document.createElement('tr');
     const pnl = c.pnl_r;
     tr.innerHTML = `<td>${c.symbol}</td><td>${c.market}</td><td>${c.tf}</td><td>${c.arch}</td><td>${c.direction}</td>
-      <td>${Number(c.entry_price).toFixed(4)}</td><td>${Number(c.exit_price).toFixed(4)}</td>
-      <td class="${pnl>=0?'good':'bad'}">${Number(pnl).toFixed(4)}</td><td>${c.reason}</td>`;
+      <td>${c.entry_price!=null?Number(c.entry_price).toFixed(4):'—'}</td><td>${c.exit_price!=null?Number(c.exit_price).toFixed(4):'—'}</td>
+      <td class="${pnl>=0?'good':'bad'}">${pnl!=null?pnl.toFixed(2):'—'}</td><td>${c.exit_reason||''}</td>`;
     cb.appendChild(tr);
-  }
-  document.getElementById('closedSub').textContent = (ledger.closed_trades||[]).length+' total';
-
-  drawEquity();
-  drawPot1();
-}
-
-
-const WEIGHT_LABELS = {'^NSEI':'Nifty','GOLDBEES.NS':'Gold','SPX_INR':'S&P 500'};
-
-function drawPot1(){
-  const canvas = document.getElementById('pot1Canvas');
-  if(!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0,0,W,H);
-  ctx.fillStyle = '#0e1626'; ctx.fillRect(0,0,W,H);
-  const p1 = ledger && ledger.pot1;
-  const hist = (p1 && p1.nav_history) ? p1.nav_history : [];
-  const wEl = document.getElementById('pot1Weights');
-  const sEl = document.getElementById('pot1Start');
-  if (p1 && p1.current_weights){
-    wEl.textContent = Object.entries(p1.current_weights)
-      .map(([k,v]) => (WEIGHT_LABELS[k] ? WEIGHT_LABELS[k].split(' ')[0] : k) + ' ' + Math.round(v*100) + '%').join(' \u00b7 ');
-  }
-  if (p1 && p1.start_date) sEl.textContent = 'started ' + p1.start_date + ' \u00b7 next rebalance ' + (p1.next_rebalance || '');
-  if (hist.length < 2){
-    ctx.fillStyle = '#94a3b8'; ctx.font = '12px sans-serif';
-    ctx.fillText('NAV history builds as each scan marks the sleeve to market', 10, H/2);
-    return;
-  }
-  const vals = hist.map(h=>h.nav);
-  const mn = Math.min(...vals), mx = Math.max(...vals);
-  const pad = (mx-mn)*0.15 || 0.001;
-  const lo = mn-pad, hi = mx+pad;
-  const y = v => H-8-((v-lo)/(hi-lo))*(H-16);
-  const x = i => (i/(hist.length-1))*W;
-  if (1.0 >= lo && 1.0 <= hi){
-    ctx.strokeStyle = '#334155'; ctx.setLineDash([4,4]);
-    ctx.beginPath(); ctx.moveTo(0,y(1)); ctx.lineTo(W,y(1)); ctx.stroke(); ctx.setLineDash([]);
-  }
-  ctx.strokeStyle = '#2dd4bf'; ctx.lineWidth = 2; ctx.beginPath();
-  hist.forEach((h,i)=>{ i===0 ? ctx.moveTo(x(i),y(h.nav)) : ctx.lineTo(x(i),y(h.nav)); });
-  ctx.stroke();
-  const last = hist[hist.length-1];
-  ctx.fillStyle = '#2dd4bf'; ctx.beginPath(); ctx.arc(x(hist.length-1), y(last.nav), 3.5, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#94a3b8'; ctx.font = '11px sans-serif';
-  ctx.fillText(hist[0].date + ' \u2192 ' + last.date + ' \u00b7 NAV ' + Number(last.nav).toFixed(4), 8, 14);
-}
-
-function drawEquity(){
-  const canvas = document.getElementById('eqCanvas');
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0,0,W,H);
-  ctx.fillStyle = '#0e1626'; ctx.fillRect(0,0,W,H);
-  // target line
-  const allEq = equitySeries.map(s=>s.equity).concat([100, ledger.account.equity]);
-  const minE = Math.min(...allEq, 90);
-  const maxE = Math.max(...allEq, 1010);
-  const pad = (maxE-minE)*0.1 || 10;
-  const lo = minE - pad, hi = maxE + pad;
-  const y = v => H - ((v-lo)/(hi-lo))*H;
-  // target
-  ctx.strokeStyle = '#f59e0b'; ctx.setLineDash([6,4]);
-  ctx.beginPath(); ctx.moveTo(0,y(1000)); ctx.lineTo(W,y(1000)); ctx.stroke(); ctx.setLineDash([]);
-  ctx.fillStyle='#f59e0b'; ctx.font='11px sans-serif'; ctx.fillText('target \u20B95,00,000', 8, y(1000)-4);
-  if (equitySeries.length>=2){
-    ctx.strokeStyle='#3b82f6'; ctx.lineWidth=2;
-    ctx.beginPath();
-    equitySeries.forEach((s,i)=>{
-      const x = (i/(equitySeries.length-1))*W;
-      if(i===0) ctx.moveTo(x,y(s.equity)); else ctx.lineTo(x,y(s.equity));
-    });
-    ctx.stroke();
-  }
-  // current dot
-  if (equitySeries.length){
-    const last = equitySeries[equitySeries.length-1];
-    const x = (equitySeries.length-1)/(Math.max(1,equitySeries.length-1))*W;
-    ctx.fillStyle='#22c55e'; ctx.beginPath(); ctx.arc(x,y(last.equity),4,0,Math.PI*2); ctx.fill();
-  }
-}
-
-function normalizePositions(){
-  if (!ledger || !Array.isArray(ledger.open_positions)) return;
-  for (const p of ledger.open_positions){
-    if (!p) continue;
-    if (p.stop_price == null && p.stop != null) p.stop_price = p.stop;
-    // preserve the entry stop so ratcheting never breaks seal verification
-    if (p.initial_stop == null) p.initial_stop = p.stop_price;
   }
 }
 
@@ -551,17 +618,14 @@ function placedBarTimeOf(rec){
   const parts = String(rec.order_id || '').split('|');
   return parts.length >= 5 ? parts[4] : '';
 }
-
 function sealMessage(rec, stopValue){
   const pbt = placedBarTimeOf(rec);
   return `${rec.symbol}|${rec.tf}|${rec.arch}|${rec.direction}|${pbt}|${Number(rec.limit_price != null ? rec.limit_price : rec.entry_price).toFixed(6)}|${Number(stopValue).toFixed(6)}|${Number(rec.target_price).toFixed(6)}`;
 }
-
 async function verifySeals(){
   if (!ledger) return;
   const out = [];
   let checked = 0, mismatches = 0;
-  // ALL open positions — use initial_stop (entry stop) so a ratchet never false-fails
   for (const p of (ledger.open_positions||[])){
     const stop = (p.initial_stop != null ? p.initial_stop : (p.stop != null ? p.stop : p.stop_price));
     if (stop == null || p.entry_price == null) continue;
@@ -570,7 +634,6 @@ async function verifySeals(){
     checked++; if (!ok) mismatches++;
     out.push('POS ' + String(p.order_id).slice(0,28) + ' → ' + (ok?'OK':'MISMATCH'));
   }
-  // ALL pending orders (no slicing)
   for (const o of (ledger.pending_orders||[])){
     const hex = await sha256Hex(sealMessage(o, o.stop_price));
     const ok = hex === o.seal_sha256;
@@ -584,14 +647,15 @@ async function verifySeals(){
 async function init(){
   const unlocked = await gate();
   if (!unlocked){
-    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#94a3b8;font-family:Segoe UI,sans-serif">Locked. Wrong password (or cancelled). Refresh to try again.</div>';
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#94a3b8;font-family:Segoe UI,sans-serif;padding:0 20px;text-align:center">Locked. Wrong password (or cancelled). Refresh to try again.</div>';
     return;
   }
   try{
     let r;
     try { r = await fetch(LEDGER_LOCAL_URL); if(!r.ok) throw new Error(r.status); }
     catch(e){ r = await fetch(LEDGER_CLOUD_URL); if(!r.ok) throw new Error(r.status); }
-    ledger = await r.json();    if (!ledger.account) ledger.account = {equity:100, risk_pct:0.03, target:1000};
+    ledger = await r.json();
+    if (!ledger.account) ledger.account = {equity:100, risk_pct:0.03, target:1000};
     if (!ledger.open_positions) ledger.open_positions=[];
     if (!ledger.pending_orders) ledger.pending_orders=[];
     if (!ledger.closed_trades) ledger.closed_trades=[];
