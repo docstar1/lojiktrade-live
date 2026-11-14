@@ -1,6 +1,6 @@
 # Live Forward Scanner Status
 
-Last run: 2026-11-13T22:53:44.084944+00:00
+Last run: 2026-11-14T02:51:05.621965+00:00
 
 ## Account
 - Equity: $100.00 (target $1000.00)
@@ -14,7 +14,7 @@ Last run: 2026-11-13T22:53:44.084944+00:00
 ## Open Positions
 | Symbol | Market | TF | Arch | Dir | Entry | Stop | Target | Unreal R |
 |---|---|---|---|---|---|---|---|---|
-| HAL.NS | IndiaNSE | 1d | MA7_TRUE | long | 4874.7896 | 4625.8882 | 5372.5924 | -0.13 |
+| HAL.NS | IndiaNSE | 1d | MA7_TRUE | long | 4874.7896 | 4625.8882 | 5372.5924 | -0.26 |
 
 ## Pending Orders
 | Symbol | Market | TF | Arch | Dir | Limit | Stop | Target | Score |
