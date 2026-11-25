@@ -1,26 +1,26 @@
 # Live Forward Scanner Status
 
-Last run: 2026-11-24T23:28:05.300906+00:00
+Last run: 2026-11-25T05:35:57.687187+00:00
 
 ## Account
-- Equity: $100.00 (target $1000.00)
+- Equity: $99.60 (target $1000.00)
 - Risk %: 3.0% (max 3.0%)
-- Open positions: 1 / 3 (max 1 per market bucket)
+- Open positions: 0 / 3 (max 1 per market bucket)
 - Pending orders: 0
-- Closed trades: 0
-- Block stats: {'consecutive_losses': 0, 's_min_current': 2.6, 'min_rr_current': 1.8, 'blocked': False, 'cooldowns': [], 'min_rr': 1.8, 'monthly_dd_pct': 0.0}
+- Closed trades: 1
+- Block stats: {'consecutive_losses': 0, 's_min_current': 2.6, 'min_rr_current': 1.8, 'blocked': False, 'cooldowns': [], 'min_rr': 1.8, 'monthly_dd_pct': 0.003950999999999994}
 - Dynamic thresholds: s_min 2.6 | min_rr 1.8
 
 ## Open Positions
-| Symbol | Market | TF | Arch | Dir | Entry | Stop | Target | Unreal R |
-|---|---|---|---|---|---|---|---|---|
-| HAL.NS | IndiaNSE | 1d | MA7_TRUE | long | 4874.7896 | 4625.8882 | 5372.5924 | -0.38 |
+_None_
 
 ## Pending Orders
 _None_
 
 ## Recent Closed Trades
-_None_
+| Symbol | Market | TF | Arch | Dir | PnL R | Reason |
+|---|---|---|---|---|---|---|
+| HAL.NS | IndiaNSE | 1d | MA7_TRUE | long | -0.1317 | TIME_FLAT_EXIT |
 
 
 ## Two-pot plan (2026-11-09)
