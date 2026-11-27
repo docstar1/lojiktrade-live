@@ -1,12 +1,12 @@
 # Live Forward Scanner Status
 
-Last run: 2026-11-27T01:55:49.238618+00:00
+Last run: 2026-11-27T10:25:50.555566+00:00
 
 ## Account
 - Equity: $99.60 (target $1000.00)
 - Risk %: 3.0% (max 3.0%)
 - Open positions: 0 / 3 (max 1 per market bucket)
-- Pending orders: 1
+- Pending orders: 0
 - Closed trades: 1
 - Block stats: {'consecutive_losses': 0, 's_min_current': 2.6, 'min_rr_current': 1.8, 'blocked': False, 'cooldowns': [], 'min_rr': 1.8, 'monthly_dd_pct': 0.003950999999999994}
 - Dynamic thresholds: s_min 2.6 | min_rr 1.8
@@ -15,9 +15,7 @@ Last run: 2026-11-27T01:55:49.238618+00:00
 _None_
 
 ## Pending Orders
-| Symbol | Market | TF | Arch | Dir | Limit | Stop | Target | Score |
-|---|---|---|---|---|---|---|---|---|
-| RELIANCE.NS | IndiaNSE | 1h | MA7_TRUE | long | 1368.1002 | 1344.1859 | 1415.9287 | 2.80 |
+_None_
 
 ## Recent Closed Trades
 | Symbol | Market | TF | Arch | Dir | PnL R | Reason |
